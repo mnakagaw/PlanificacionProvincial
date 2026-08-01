@@ -144,16 +144,6 @@ function layerFill(province, layer, maximum) {
   return palette[index];
 }
 
-function StatCard({ label, value, note, tone }) {
-  return (
-    <article className={`stat-card ${tone ? `tone-${tone}` : ""}`}>
-      <span>{label}</span>
-      <strong>{value}</strong>
-      <small>{note}</small>
-    </article>
-  );
-}
-
 function SourceLink({ href, label, meta: sourceMeta, primary = false }) {
   return (
     <a
@@ -227,6 +217,17 @@ export function App() {
 
   const displayProvince = hovered || selected;
   const activeMeta = LAYERS[activeLayer];
+  const totalPopulation = useMemo(
+    () => provinces.reduce((total, province) => total + province.population, 0),
+    [],
+  );
+
+  const layerTotals = {
+    overview: numberFormatter.format(meta.totals.provinces),
+    population: compactFormatter.format(totalPopulation),
+    investment: numberFormatter.format(meta.totals.nationalInvestmentProjects),
+    demands: numberFormatter.format(meta.totals.demands),
+  };
 
   function chooseProvince(province) {
     setSelected(province);
@@ -254,72 +255,21 @@ export function App() {
           </span>
         </a>
         <div className="header-meta">
-          <span>32 provincias</span>
+          <span>Fuentes DDPT</span>
           <i aria-hidden="true" />
-          <span>Base territorial 2026</span>
+          <span>Corte {meta.investmentAsOf}</span>
         </div>
       </header>
 
-      <section className="hero" id="top">
-        <div className="hero-copy">
-          <span className="eyebrow">INSTRUMENTOS PARA LA PLANIFICACIÓN TERRITORIAL</span>
-          <h1>Tablero de<br /><em>Planificación Provincial</em></h1>
-          <p>
-            Una lectura integrada del diagnóstico, la inversión pública y las
-            demandas priorizadas para iniciar la formulación de los primeros
-            planes provinciales del país.
-          </p>
-        </div>
-        <aside className="hero-note">
-          <span className="note-icon" aria-hidden="true">01</span>
-          <div>
-            <strong>Punto de partida</strong>
-            <p>
-              No se ha identificado ningún Plan Provincial publicado. Esta
-              versión organiza los insumos disponibles y no utiliza SISMAP.
-            </p>
-          </div>
-        </aside>
-      </section>
-
-      <section className="national-stats" aria-label="Resumen nacional">
-        <StatCard
-          label="Cobertura"
-          value={meta.totals.provinces}
-          note="provincias y Distrito Nacional"
-        />
-        <StatCard
-          label="Planes Provinciales"
-          value={meta.totals.provincialPlans}
-          note="publicados o identificados"
-          tone="warning"
-        />
-        <StatCard
-          label="Demandas priorizadas"
-          value={numberFormatter.format(meta.totals.demands)}
-          note="consolidado provincial"
-          tone="blue"
-        />
-        <StatCard
-          label="Inversión 2026"
-          value={numberFormatter.format(meta.totals.nationalInvestmentProjects)}
-          note="proyectos con presupuesto nacional"
-          tone="gold"
-        />
+      <section className="page-intro" id="top">
+        <h1>Tablero de Planificación Provincial</h1>
+        <p>
+          Consulte el diagnóstico, la inversión pública, las demandas priorizadas
+          y la situación del Plan Provincial.
+        </p>
       </section>
 
       <section className="map-section">
-        <div className="section-heading">
-          <div>
-            <span className="section-index">01 / TERRITORIO</span>
-            <h2>Explore cada provincia</h2>
-          </div>
-          <p>
-            Seleccione una lectura temática y haga clic en el mapa para abrir
-            la ficha provincial.
-          </p>
-        </div>
-
         <div className="layer-switcher" role="group" aria-label="Lectura del mapa">
           {Object.entries(LAYERS).map(([key, layer]) => (
             <button
@@ -330,19 +280,22 @@ export function App() {
               style={{ "--layer-accent": layer.color }}
               aria-pressed={activeLayer === key}
             >
-              <span className="layer-number">0{Object.keys(LAYERS).indexOf(key) + 1}</span>
-              <span>
-                <small>{layer.eyebrow}</small>
-                <strong>{layer.label}</strong>
-                <em>{layer.description}</em>
-              </span>
+              <i className="layer-dot" aria-hidden="true" />
+              <span>{layer.label}</span>
+              <strong>{layerTotals[key]}</strong>
             </button>
           ))}
+          <article className="plan-summary" aria-label="Planes Provinciales identificados: 0">
+            <i className="layer-dot" aria-hidden="true" />
+            <span>Plan Provincial</span>
+            <strong>{meta.totals.provincialPlans}</strong>
+          </article>
         </div>
 
         <div className="selection-bar">
+          <strong className="selection-title">Seleccione una provincia</strong>
           <label htmlFor="region-select">
-            <span>Región de planificación</span>
+            <span>Región</span>
             <select
               id="region-select"
               value={selectedRegion}
@@ -381,10 +334,13 @@ export function App() {
           <article className="map-panel">
             <div className="map-header">
               <div>
-                <span className="map-kicker">MAPA PROVINCIAL</span>
-                <strong>{activeMeta.label}</strong>
+                <i style={{ background: activeMeta.color }} aria-hidden="true" />
+                <span>
+                  <strong>{activeMeta.label}</strong>
+                  <small>{activeMeta.description}</small>
+                </span>
               </div>
-              <p>{activeMeta.description}</p>
+              <p>Haga clic en el mapa para elegir una provincia</p>
             </div>
             <div className="map-canvas">
               {mapError ? (
