@@ -1,0 +1,984 @@
+{
+  "meta": {
+    "generatedAt": "2026-08-01T14:15:19.965Z",
+    "diagnosticGeneratedAt": "2026-07-31T19:14:33.946Z",
+    "investmentAsOf": "2026-07-31",
+    "investmentYear": 2026,
+    "planBaseline": "2026-08-01",
+    "sources": {
+      "diagnostic": "https://prodecare.net/DDPT/Dashboard-Territorial/data/territorial-dashboard.json",
+      "investment": "https://prodecare.net/DDPT/InversionPublicaTerritorial/data/mapa_inversion.json",
+      "demands": "https://prodecare.net/DDPT/DemandasProvinciales/",
+      "municipalPlanning": "https://prodecare.net/DDPT/PlanificacionMunicipal/",
+      "geometry": "https://prodecare.net/DDPT/PlanificacionMunicipal/data/adm2.geojson"
+    },
+    "totals": {
+      "provinces": 32,
+      "provincialPlans": 0,
+      "demands": 503,
+      "nationalInvestmentProjects": 2229
+    }
+  },
+  "provinces": [
+    {
+      "key": "azua",
+      "name": "Azua",
+      "region": "El Valle",
+      "population": 240209,
+      "municipalityCount": 10,
+      "plan": {
+        "exists": false,
+        "status": "Por formular"
+      },
+      "diagnosis": {
+        "homicideRate": 8.7,
+        "homicideYear": 2024,
+        "extremeOvercrowdingPct": 8.7,
+        "overcrowdingYear": 2026,
+        "inaipiCenters": 37,
+        "sportsFacilities": 107
+      },
+      "investment": {
+        "year": 2026,
+        "projectCount": 80,
+        "budget": 7786298369.910001,
+        "executed": 3074639109.4800005,
+        "executionPct": 39.48781517751598,
+        "projectsWithExecution": 34,
+        "projectsWithActiveContracts": 22,
+        "topSector": "Educación"
+      },
+      "demands": 14
+    },
+    {
+      "key": "baoruco",
+      "name": "Baoruco",
+      "region": "Enriquillo",
+      "population": 108717,
+      "municipalityCount": 5,
+      "plan": {
+        "exists": false,
+        "status": "Por formular"
+      },
+      "diagnosis": {
+        "homicideRate": 9.2,
+        "homicideYear": 2024,
+        "extremeOvercrowdingPct": null,
+        "overcrowdingYear": null,
+        "inaipiCenters": 13,
+        "sportsFacilities": 88
+      },
+      "investment": {
+        "year": 2026,
+        "projectCount": 37,
+        "budget": 7646327425.410001,
+        "executed": 3468370507.200001,
+        "executionPct": 45.35995274900257,
+        "projectsWithExecution": 21,
+        "projectsWithActiveContracts": 10,
+        "topSector": "Educación"
+      },
+      "demands": 16
+    },
+    {
+      "key": "barahona",
+      "name": "Barahona",
+      "region": "Enriquillo",
+      "population": 200886,
+      "municipalityCount": 11,
+      "plan": {
+        "exists": false,
+        "status": "Por formular"
+      },
+      "diagnosis": {
+        "homicideRate": 14.9,
+        "homicideYear": 2024,
+        "extremeOvercrowdingPct": 9.4,
+        "overcrowdingYear": 2026,
+        "inaipiCenters": 31,
+        "sportsFacilities": 105
+      },
+      "investment": {
+        "year": 2026,
+        "projectCount": 41,
+        "budget": 9237008058.839998,
+        "executed": 4977380942.130001,
+        "executionPct": 53.88520731414269,
+        "projectsWithExecution": 23,
+        "projectsWithActiveContracts": 10,
+        "topSector": "Educación"
+      },
+      "demands": 12
+    },
+    {
+      "key": "dajabon",
+      "name": "Dajabón",
+      "region": "Cibao Noroeste",
+      "population": 74810,
+      "municipalityCount": 5,
+      "plan": {
+        "exists": false,
+        "status": "Por formular"
+      },
+      "diagnosis": {
+        "homicideRate": 10.7,
+        "homicideYear": 2024,
+        "extremeOvercrowdingPct": 3.1,
+        "overcrowdingYear": 2026,
+        "inaipiCenters": 8,
+        "sportsFacilities": 57
+      },
+      "investment": {
+        "year": 2026,
+        "projectCount": 43,
+        "budget": 9994332405.980001,
+        "executed": 3657230675.059999,
+        "executionPct": 36.59304620358368,
+        "projectsWithExecution": 30,
+        "projectsWithActiveContracts": 19,
+        "topSector": "Educación"
+      },
+      "demands": 15
+    },
+    {
+      "key": "distritonacional",
+      "name": "Distrito Nacional",
+      "region": "Ozama",
+      "population": 1029110,
+      "municipalityCount": 1,
+      "plan": {
+        "exists": false,
+        "status": "Por formular"
+      },
+      "diagnosis": {
+        "homicideRate": 10.3,
+        "homicideYear": 2024,
+        "extremeOvercrowdingPct": 9.4,
+        "overcrowdingYear": 2026,
+        "inaipiCenters": 65,
+        "sportsFacilities": 341
+      },
+      "investment": {
+        "year": 2026,
+        "projectCount": 121,
+        "budget": 19643459719.900005,
+        "executed": 9467252550.800001,
+        "executionPct": 48.19544360207131,
+        "projectsWithExecution": 73,
+        "projectsWithActiveContracts": 59,
+        "topSector": "Actividades deportivas, recreativas, culturales y religiosas"
+      },
+      "demands": 1
+    },
+    {
+      "key": "duarte",
+      "name": "Duarte",
+      "region": "Cibao Nordeste",
+      "population": 308353,
+      "municipalityCount": 7,
+      "plan": {
+        "exists": false,
+        "status": "Por formular"
+      },
+      "diagnosis": {
+        "homicideRate": 10.7,
+        "homicideYear": 2024,
+        "extremeOvercrowdingPct": 4,
+        "overcrowdingYear": 2026,
+        "inaipiCenters": 18,
+        "sportsFacilities": 272
+      },
+      "investment": {
+        "year": 2026,
+        "projectCount": 102,
+        "budget": 8045023288.23,
+        "executed": 3364572968.42,
+        "executionPct": 41.82179277644138,
+        "projectsWithExecution": 36,
+        "projectsWithActiveContracts": 19,
+        "topSector": "Educación"
+      },
+      "demands": 19
+    },
+    {
+      "key": "elseibo",
+      "name": "El Seibo",
+      "region": "Yuma",
+      "population": 99169,
+      "municipalityCount": 2,
+      "plan": {
+        "exists": false,
+        "status": "Por formular"
+      },
+      "diagnosis": {
+        "homicideRate": 21.2,
+        "homicideYear": 2024,
+        "extremeOvercrowdingPct": 10.8,
+        "overcrowdingYear": 2026,
+        "inaipiCenters": 6,
+        "sportsFacilities": 57
+      },
+      "investment": {
+        "year": 2026,
+        "projectCount": 54,
+        "budget": 4708884446.04,
+        "executed": 1737178920.9899998,
+        "executionPct": 36.89151732000779,
+        "projectsWithExecution": 32,
+        "projectsWithActiveContracts": 9,
+        "topSector": "Educación"
+      },
+      "demands": 15
+    },
+    {
+      "key": "eliaspina",
+      "name": "Elías Piña",
+      "region": "El Valle",
+      "population": 64614,
+      "municipalityCount": 6,
+      "plan": {
+        "exists": false,
+        "status": "Por formular"
+      },
+      "diagnosis": {
+        "homicideRate": 21.7,
+        "homicideYear": 2024,
+        "extremeOvercrowdingPct": 11.6,
+        "overcrowdingYear": 2026,
+        "inaipiCenters": 9,
+        "sportsFacilities": 28
+      },
+      "investment": {
+        "year": 2026,
+        "projectCount": 51,
+        "budget": 8398803716.84,
+        "executed": 3243972707.0799994,
+        "executionPct": 38.62422335904434,
+        "projectsWithExecution": 30,
+        "projectsWithActiveContracts": 20,
+        "topSector": "Educación"
+      },
+      "demands": 18
+    },
+    {
+      "key": "espaillat",
+      "name": "Espaillat",
+      "region": "Cibao Norte",
+      "population": 241058,
+      "municipalityCount": 5,
+      "plan": {
+        "exists": false,
+        "status": "Por formular"
+      },
+      "diagnosis": {
+        "homicideRate": 4.6,
+        "homicideYear": 2024,
+        "extremeOvercrowdingPct": 5.4,
+        "overcrowdingYear": 2026,
+        "inaipiCenters": 12,
+        "sportsFacilities": 145
+      },
+      "investment": {
+        "year": 2026,
+        "projectCount": 53,
+        "budget": 5742688460.64,
+        "executed": 2503045365.7,
+        "executionPct": 43.58664731433202,
+        "projectsWithExecution": 32,
+        "projectsWithActiveContracts": 15,
+        "topSector": "Educación"
+      },
+      "demands": 10
+    },
+    {
+      "key": "hatomayor",
+      "name": "Hato Mayor",
+      "region": "Higuamo",
+      "population": 100133,
+      "municipalityCount": 3,
+      "plan": {
+        "exists": false,
+        "status": "Por formular"
+      },
+      "diagnosis": {
+        "homicideRate": 11,
+        "homicideYear": 2024,
+        "extremeOvercrowdingPct": 6.2,
+        "overcrowdingYear": 2026,
+        "inaipiCenters": 10,
+        "sportsFacilities": 45
+      },
+      "investment": {
+        "year": 2026,
+        "projectCount": 52,
+        "budget": 5390027063.210001,
+        "executed": 2738916663.179999,
+        "executionPct": 50.81452525303003,
+        "projectsWithExecution": 31,
+        "projectsWithActiveContracts": 8,
+        "topSector": "Educación"
+      },
+      "demands": 18
+    },
+    {
+      "key": "hermanasmirabal",
+      "name": "Hermanas Mirabal",
+      "region": "Cibao Nordeste",
+      "population": 96441,
+      "municipalityCount": 3,
+      "plan": {
+        "exists": false,
+        "status": "Por formular"
+      },
+      "diagnosis": {
+        "homicideRate": 7.3,
+        "homicideYear": 2024,
+        "extremeOvercrowdingPct": 2.6,
+        "overcrowdingYear": 2026,
+        "inaipiCenters": 20,
+        "sportsFacilities": 58
+      },
+      "investment": {
+        "year": 2026,
+        "projectCount": 48,
+        "budget": 3530558649.7600007,
+        "executed": 1475144958.7300003,
+        "executionPct": 41.78219667389684,
+        "projectsWithExecution": 20,
+        "projectsWithActiveContracts": 10,
+        "topSector": "Educación"
+      },
+      "demands": 9
+    },
+    {
+      "key": "independencia",
+      "name": "Independencia",
+      "region": "Enriquillo",
+      "population": 60689,
+      "municipalityCount": 6,
+      "plan": {
+        "exists": false,
+        "status": "Por formular"
+      },
+      "diagnosis": {
+        "homicideRate": 4.9,
+        "homicideYear": 2024,
+        "extremeOvercrowdingPct": 8.9,
+        "overcrowdingYear": 2026,
+        "inaipiCenters": 12,
+        "sportsFacilities": 41
+      },
+      "investment": {
+        "year": 2026,
+        "projectCount": 80,
+        "budget": 13425988778.41,
+        "executed": 5209036331.119998,
+        "executionPct": 38.79815793900052,
+        "projectsWithExecution": 45,
+        "projectsWithActiveContracts": 24,
+        "topSector": "Educación"
+      },
+      "demands": 16
+    },
+    {
+      "key": "laaltagracia",
+      "name": "La Altagracia",
+      "region": "Yuma",
+      "population": 446060,
+      "municipalityCount": 2,
+      "plan": {
+        "exists": false,
+        "status": "Por formular"
+      },
+      "diagnosis": {
+        "homicideRate": 10.8,
+        "homicideYear": 2024,
+        "extremeOvercrowdingPct": 15.4,
+        "overcrowdingYear": 2026,
+        "inaipiCenters": 19,
+        "sportsFacilities": 68
+      },
+      "investment": {
+        "year": 2026,
+        "projectCount": 72,
+        "budget": 7096419426.91,
+        "executed": 2293892249.73,
+        "executionPct": 32.324643059166405,
+        "projectsWithExecution": 38,
+        "projectsWithActiveContracts": 12,
+        "topSector": "Educación"
+      },
+      "demands": 16
+    },
+    {
+      "key": "laromana",
+      "name": "La Romana",
+      "region": "Yuma",
+      "population": 287914,
+      "municipalityCount": 3,
+      "plan": {
+        "exists": false,
+        "status": "Por formular"
+      },
+      "diagnosis": {
+        "homicideRate": 12.2,
+        "homicideYear": 2024,
+        "extremeOvercrowdingPct": 13.9,
+        "overcrowdingYear": 2026,
+        "inaipiCenters": 19,
+        "sportsFacilities": 79
+      },
+      "investment": {
+        "year": 2026,
+        "projectCount": 32,
+        "budget": 3846786557.11,
+        "executed": 1431436687.8599994,
+        "executionPct": 37.21123245619856,
+        "projectsWithExecution": 18,
+        "projectsWithActiveContracts": 7,
+        "topSector": "Educación"
+      },
+      "demands": 12
+    },
+    {
+      "key": "lavega",
+      "name": "La Vega",
+      "region": "Cibao Sur",
+      "population": 442719,
+      "municipalityCount": 4,
+      "plan": {
+        "exists": false,
+        "status": "Por formular"
+      },
+      "diagnosis": {
+        "homicideRate": 10.8,
+        "homicideYear": 2024,
+        "extremeOvercrowdingPct": 3.6,
+        "overcrowdingYear": 2026,
+        "inaipiCenters": 20,
+        "sportsFacilities": 151
+      },
+      "investment": {
+        "year": 2026,
+        "projectCount": 95,
+        "budget": 9140933973.990005,
+        "executed": 3552015174.6599994,
+        "executionPct": 38.85833969227927,
+        "projectsWithExecution": 50,
+        "projectsWithActiveContracts": 24,
+        "topSector": "Educación"
+      },
+      "demands": 24
+    },
+    {
+      "key": "mariatrinidadsanchez",
+      "name": "María Trinidad Sánchez",
+      "region": "Cibao Nordeste",
+      "population": 156633,
+      "municipalityCount": 4,
+      "plan": {
+        "exists": false,
+        "status": "Por formular"
+      },
+      "diagnosis": {
+        "homicideRate": 8.3,
+        "homicideYear": 2024,
+        "extremeOvercrowdingPct": 3.9,
+        "overcrowdingYear": 2026,
+        "inaipiCenters": 13,
+        "sportsFacilities": 61
+      },
+      "investment": {
+        "year": 2026,
+        "projectCount": 50,
+        "budget": 4831328089.88,
+        "executed": 2069409329.2,
+        "executionPct": 42.83313595561257,
+        "projectsWithExecution": 23,
+        "projectsWithActiveContracts": 10,
+        "topSector": "Educación"
+      },
+      "demands": 10
+    },
+    {
+      "key": "monsenornouel",
+      "name": "Monseñor Nouel",
+      "region": "Cibao Sur",
+      "population": 195547,
+      "municipalityCount": 3,
+      "plan": {
+        "exists": false,
+        "status": "Por formular"
+      },
+      "diagnosis": {
+        "homicideRate": 4.1,
+        "homicideYear": 2024,
+        "extremeOvercrowdingPct": 2.8,
+        "overcrowdingYear": 2026,
+        "inaipiCenters": 8,
+        "sportsFacilities": 66
+      },
+      "investment": {
+        "year": 2026,
+        "projectCount": 52,
+        "budget": 5424694467.860002,
+        "executed": 1817570245.0099993,
+        "executionPct": 33.505485991490616,
+        "projectsWithExecution": 28,
+        "projectsWithActiveContracts": 11,
+        "topSector": "Educación"
+      },
+      "demands": 37
+    },
+    {
+      "key": "montecristi",
+      "name": "Monte Cristi",
+      "region": "Cibao Noroeste",
+      "population": 123519,
+      "municipalityCount": 6,
+      "plan": {
+        "exists": false,
+        "status": "Por formular"
+      },
+      "diagnosis": {
+        "homicideRate": 11.3,
+        "homicideYear": 2024,
+        "extremeOvercrowdingPct": 5,
+        "overcrowdingYear": 2026,
+        "inaipiCenters": 7,
+        "sportsFacilities": 129
+      },
+      "investment": {
+        "year": 2026,
+        "projectCount": 72,
+        "budget": 9645847534.76,
+        "executed": 3331090806.0599995,
+        "executionPct": 34.53393591445442,
+        "projectsWithExecution": 41,
+        "projectsWithActiveContracts": 17,
+        "topSector": "Educación"
+      },
+      "demands": 14
+    },
+    {
+      "key": "monteplata",
+      "name": "Monte Plata",
+      "region": "Higuamo",
+      "population": 205498,
+      "municipalityCount": 5,
+      "plan": {
+        "exists": false,
+        "status": "Por formular"
+      },
+      "diagnosis": {
+        "homicideRate": 8.8,
+        "homicideYear": 2024,
+        "extremeOvercrowdingPct": 3.9,
+        "overcrowdingYear": 2026,
+        "inaipiCenters": 14,
+        "sportsFacilities": 103
+      },
+      "investment": {
+        "year": 2026,
+        "projectCount": 109,
+        "budget": 7240677271.22,
+        "executed": 2888099577.03,
+        "executionPct": 39.887146862759934,
+        "projectsWithExecution": 52,
+        "projectsWithActiveContracts": 14,
+        "topSector": "Educación"
+      },
+      "demands": 17
+    },
+    {
+      "key": "pedernales",
+      "name": "Pedernales",
+      "region": "Enriquillo",
+      "population": 34375,
+      "municipalityCount": 2,
+      "plan": {
+        "exists": false,
+        "status": "Por formular"
+      },
+      "diagnosis": {
+        "homicideRate": 20.4,
+        "homicideYear": 2024,
+        "extremeOvercrowdingPct": 8.5,
+        "overcrowdingYear": 2026,
+        "inaipiCenters": 4,
+        "sportsFacilities": 22
+      },
+      "investment": {
+        "year": 2026,
+        "projectCount": 41,
+        "budget": 9018660457.26,
+        "executed": 4755452316.81,
+        "executionPct": 52.729031537958306,
+        "projectsWithExecution": 27,
+        "projectsWithActiveContracts": 15,
+        "topSector": "Educación"
+      },
+      "demands": 22
+    },
+    {
+      "key": "peravia",
+      "name": "Peravia",
+      "region": "Valdesia",
+      "population": 209372,
+      "municipalityCount": 3,
+      "plan": {
+        "exists": false,
+        "status": "Por formular"
+      },
+      "diagnosis": {
+        "homicideRate": 11.5,
+        "homicideYear": 2024,
+        "extremeOvercrowdingPct": 7.4,
+        "overcrowdingYear": 2026,
+        "inaipiCenters": 11,
+        "sportsFacilities": 78
+      },
+      "investment": {
+        "year": 2026,
+        "projectCount": 60,
+        "budget": 3752027636.6900005,
+        "executed": 1684437376.279999,
+        "executionPct": 44.89405567827832,
+        "projectsWithExecution": 26,
+        "projectsWithActiveContracts": 17,
+        "topSector": "Educación"
+      },
+      "demands": 12
+    },
+    {
+      "key": "puertoplata",
+      "name": "Puerto Plata",
+      "region": "Cibao Norte",
+      "population": 338355,
+      "municipalityCount": 9,
+      "plan": {
+        "exists": false,
+        "status": "Por formular"
+      },
+      "diagnosis": {
+        "homicideRate": 6.5,
+        "homicideYear": 2024,
+        "extremeOvercrowdingPct": 3.7,
+        "overcrowdingYear": 2026,
+        "inaipiCenters": 17,
+        "sportsFacilities": 170
+      },
+      "investment": {
+        "year": 2026,
+        "projectCount": 101,
+        "budget": 9810162133.280003,
+        "executed": 3730779124.2200003,
+        "executionPct": 38.02973970800851,
+        "projectsWithExecution": 39,
+        "projectsWithActiveContracts": 28,
+        "topSector": "Educación"
+      },
+      "demands": 25
+    },
+    {
+      "key": "samana",
+      "name": "Samaná",
+      "region": "Cibao Nordeste",
+      "population": 111987,
+      "municipalityCount": 3,
+      "plan": {
+        "exists": false,
+        "status": "Por formular"
+      },
+      "diagnosis": {
+        "homicideRate": 14.3,
+        "homicideYear": 2024,
+        "extremeOvercrowdingPct": 7.4,
+        "overcrowdingYear": 2026,
+        "inaipiCenters": 5,
+        "sportsFacilities": 44
+      },
+      "investment": {
+        "year": 2026,
+        "projectCount": 44,
+        "budget": 4230865721.56,
+        "executed": 1748434792.3500001,
+        "executionPct": 41.32569803480596,
+        "projectsWithExecution": 15,
+        "projectsWithActiveContracts": 6,
+        "topSector": "Educación"
+      },
+      "demands": 15
+    },
+    {
+      "key": "sancristobal",
+      "name": "San Cristóbal",
+      "region": "Valdesia",
+      "population": 688828,
+      "municipalityCount": 8,
+      "plan": {
+        "exists": false,
+        "status": "Por formular"
+      },
+      "diagnosis": {
+        "homicideRate": 12.3,
+        "homicideYear": 2024,
+        "extremeOvercrowdingPct": 6.4,
+        "overcrowdingYear": 2026,
+        "inaipiCenters": 42,
+        "sportsFacilities": 170
+      },
+      "investment": {
+        "year": 2026,
+        "projectCount": 104,
+        "budget": 8254985249.030001,
+        "executed": 3534207132.4200006,
+        "executionPct": 42.8130036069451,
+        "projectsWithExecution": 39,
+        "projectsWithActiveContracts": 20,
+        "topSector": "Educación"
+      },
+      "demands": 18
+    },
+    {
+      "key": "sanjosedeocoa",
+      "name": "San José de Ocoa",
+      "region": "Valdesia",
+      "population": 69082,
+      "municipalityCount": 3,
+      "plan": {
+        "exists": false,
+        "status": "Por formular"
+      },
+      "diagnosis": {
+        "homicideRate": 8.7,
+        "homicideYear": 2024,
+        "extremeOvercrowdingPct": 6,
+        "overcrowdingYear": 2026,
+        "inaipiCenters": 6,
+        "sportsFacilities": 41
+      },
+      "investment": {
+        "year": 2026,
+        "projectCount": 26,
+        "budget": 3993785169.1,
+        "executed": 2174119097.5499997,
+        "executionPct": 54.43755749235601,
+        "projectsWithExecution": 14,
+        "projectsWithActiveContracts": 6,
+        "topSector": "Cambio Climático"
+      },
+      "demands": 9
+    },
+    {
+      "key": "sanjuan",
+      "name": "San Juan",
+      "region": "El Valle",
+      "population": 244667,
+      "municipalityCount": 6,
+      "plan": {
+        "exists": false,
+        "status": "Por formular"
+      },
+      "diagnosis": {
+        "homicideRate": 10.2,
+        "homicideYear": 2024,
+        "extremeOvercrowdingPct": 5.8,
+        "overcrowdingYear": 2026,
+        "inaipiCenters": 38,
+        "sportsFacilities": 101
+      },
+      "investment": {
+        "year": 2026,
+        "projectCount": 78,
+        "budget": 6735497698.21,
+        "executed": 2718964024.179999,
+        "executionPct": 40.36767802478175,
+        "projectsWithExecution": 40,
+        "projectsWithActiveContracts": 17,
+        "topSector": "Educación"
+      },
+      "demands": 23
+    },
+    {
+      "key": "sanpedrodemacoris",
+      "name": "San Pedro de Macorís",
+      "region": "Higuamo",
+      "population": 337146,
+      "municipalityCount": 6,
+      "plan": {
+        "exists": false,
+        "status": "Por formular"
+      },
+      "diagnosis": {
+        "homicideRate": 9.8,
+        "homicideYear": 2024,
+        "extremeOvercrowdingPct": 8.7,
+        "overcrowdingYear": 2026,
+        "inaipiCenters": 21,
+        "sportsFacilities": 195
+      },
+      "investment": {
+        "year": 2026,
+        "projectCount": 88,
+        "budget": 7023633235.830001,
+        "executed": 2738573250.3399987,
+        "executionPct": 38.99083506196739,
+        "projectsWithExecution": 49,
+        "projectsWithActiveContracts": 26,
+        "topSector": "Educación"
+      },
+      "demands": 21
+    },
+    {
+      "key": "sanchezramirez",
+      "name": "Sánchez Ramírez",
+      "region": "Cibao Sur",
+      "population": 162642,
+      "municipalityCount": 4,
+      "plan": {
+        "exists": false,
+        "status": "Por formular"
+      },
+      "diagnosis": {
+        "homicideRate": 6.1,
+        "homicideYear": 2024,
+        "extremeOvercrowdingPct": 2.3,
+        "overcrowdingYear": 2026,
+        "inaipiCenters": 5,
+        "sportsFacilities": 86
+      },
+      "investment": {
+        "year": 2026,
+        "projectCount": 46,
+        "budget": 6212814553.91,
+        "executed": 2514964052.9300003,
+        "executionPct": 40.480269145442655,
+        "projectsWithExecution": 27,
+        "projectsWithActiveContracts": 7,
+        "topSector": "Educación"
+      },
+      "demands": 10
+    },
+    {
+      "key": "santiago",
+      "name": "Santiago",
+      "region": "Cibao Norte",
+      "population": 1074679,
+      "municipalityCount": 10,
+      "plan": {
+        "exists": false,
+        "status": "Por formular"
+      },
+      "diagnosis": {
+        "homicideRate": 7,
+        "homicideYear": 2024,
+        "extremeOvercrowdingPct": 4.3,
+        "overcrowdingYear": 2026,
+        "inaipiCenters": 58,
+        "sportsFacilities": 412
+      },
+      "investment": {
+        "year": 2026,
+        "projectCount": 157,
+        "budget": 13549679909.74,
+        "executed": 5610170390.590001,
+        "executionPct": 41.40444961033513,
+        "projectsWithExecution": 63,
+        "projectsWithActiveContracts": 45,
+        "topSector": "Educación"
+      },
+      "demands": 21
+    },
+    {
+      "key": "santiagorodriguez",
+      "name": "Santiago Rodríguez",
+      "region": "Cibao Noroeste",
+      "population": 64635,
+      "municipalityCount": 3,
+      "plan": {
+        "exists": false,
+        "status": "Por formular"
+      },
+      "diagnosis": {
+        "homicideRate": 6.2,
+        "homicideYear": 2024,
+        "extremeOvercrowdingPct": 2.7,
+        "overcrowdingYear": 2026,
+        "inaipiCenters": 4,
+        "sportsFacilities": 57
+      },
+      "investment": {
+        "year": 2026,
+        "projectCount": 28,
+        "budget": 5200865667.42,
+        "executed": 2317883192.9099994,
+        "executionPct": 44.56725747465488,
+        "projectsWithExecution": 18,
+        "projectsWithActiveContracts": 7,
+        "topSector": "Educación"
+      },
+      "demands": 13
+    },
+    {
+      "key": "santodomingo",
+      "name": "Santo Domingo",
+      "region": "Ozama",
+      "population": 2769588,
+      "municipalityCount": 7,
+      "plan": {
+        "exists": false,
+        "status": "Por formular"
+      },
+      "diagnosis": {
+        "homicideRate": 9.3,
+        "homicideYear": 2024,
+        "extremeOvercrowdingPct": 6.8,
+        "overcrowdingYear": 2026,
+        "inaipiCenters": 173,
+        "sportsFacilities": 770
+      },
+      "investment": {
+        "year": 2026,
+        "projectCount": 276,
+        "budget": 31890263720.480003,
+        "executed": 13888371713.280006,
+        "executionPct": 43.550507562472305,
+        "projectsWithExecution": 129,
+        "projectsWithActiveContracts": 104,
+        "topSector": "Educación"
+      },
+      "demands": 0
+    },
+    {
+      "key": "valverde",
+      "name": "Valverde",
+      "region": "Cibao Noroeste",
+      "population": 184069,
+      "municipalityCount": 3,
+      "plan": {
+        "exists": false,
+        "status": "Por formular"
+      },
+      "diagnosis": {
+        "homicideRate": 9.2,
+        "homicideYear": 2024,
+        "extremeOvercrowdingPct": 4.7,
+        "overcrowdingYear": 2026,
+        "inaipiCenters": 22,
+        "sportsFacilities": 98
+      },
+      "investment": {
+        "year": 2026,
+        "projectCount": 47,
+        "budget": 5281174632.850001,
+        "executed": 2343763452.1999993,
+        "executionPct": 44.379586268958136,
+        "projectsWithExecution": 31,
+        "projectsWithActiveContracts": 10,
+        "topSector": "Educación"
+      },
+      "demands": 21
+    }
+  ]
+}
