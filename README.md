@@ -36,6 +36,16 @@ La versión estática se genera en `dist/` con la ruta base:
 
 `/DDPT/PlanificacionProvincial/`
 
+## Publicación FTP
+
+El despliegue reutiliza `FTP_HOST`, `FTP_USER`, `FTP_PASS` y
+`FTP_REMOTE_ROOT` del archivo `.env` situado junto a este proyecto. El destino
+está protegido para aceptar únicamente `DDPT/PlanificacionProvincial`.
+
+```bash
+npm run deploy:ftp
+```
+
 ## Actualización de datos
 
 `npm run data:build` reconstruye `src/data/provinces.json` y

@@ -11,6 +11,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "data:build": "node scripts/build-province-data.mjs",
+    "deploy:ftp": "npm run build && node scripts/deploy-ftp.mjs",
     "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {
@@ -19,6 +20,8 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "6.0.2",
+    "basic-ftp": "^6.0.2",
+    "dotenv": "^17.2.3",
     "polygon-clipping": "^0.15.7",
     "vite": "^8.2.0"
   }
