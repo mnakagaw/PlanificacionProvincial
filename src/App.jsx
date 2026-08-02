@@ -35,27 +35,27 @@ const REGION_COLORS = {
 
 const LAYERS = {
   overview: {
-    label: "Panorama",
-    eyebrow: "Territorio",
-    description: "Las 10 regiones de planificación",
+    label: "Regiones",
+    eyebrow: "Organización territorial",
+    description: "Colores por región de planificación",
     color: "#1c5648",
   },
   population: {
     label: "Población",
     eyebrow: "Censo 2022",
-    description: "Población provincial",
+    description: "Habitantes por provincia",
     color: "#337868",
   },
   investment: {
-    label: "Inversión",
-    eyebrow: "Mapa Inversión 2026",
-    description: "Presupuesto asociado",
+    label: "Inversión pública",
+    eyebrow: "Presupuesto 2026",
+    description: "Presupuesto asociado por provincia",
     color: "#b7792d",
   },
   demands: {
     label: "Demandas",
-    eyebrow: "Agenda provincial",
-    description: "Demandas priorizadas",
+    eyebrow: "Consolidado 2026",
+    description: "Registros priorizados por provincia",
     color: "#3c7292",
   },
 };
@@ -228,13 +228,6 @@ export function App() {
     [],
   );
 
-  const layerTotals = {
-    overview: numberFormatter.format(meta.totals.provinces),
-    population: compactFormatter.format(totalPopulation),
-    investment: numberFormatter.format(meta.totals.nationalInvestmentProjects),
-    demands: numberFormatter.format(meta.totals.demands),
-  };
-
   function chooseProvince(province) {
     setSelected(province);
     setSelectedRegion(province.region);
@@ -273,12 +266,19 @@ export function App() {
       <section className="page-intro" id="top">
         <h1>Tablero de Planificación Provincial</h1>
         <p>
-          Consulte el diagnóstico, la inversión pública, las demandas priorizadas
-          y la situación del Plan Provincial.
+          Compare el territorio, la población, la inversión pública y las demandas;
+          consulte y descargue el documento base de cada provincia.
         </p>
       </section>
 
       <section className="map-section">
+        <div className="map-reading-heading">
+          <div>
+            <strong>¿Qué quiere comparar en el mapa?</strong>
+            <span>Seleccione una vista; los colores del mapa cambiarán según el indicador.</span>
+          </div>
+          <small>La fila inferior resume la cobertura nacional del tablero.</small>
+        </div>
         <div className="layer-switcher" role="group" aria-label="Lectura del mapa">
           {Object.entries(LAYERS).map(([key, layer]) => (
             <button
@@ -290,15 +290,20 @@ export function App() {
               aria-pressed={activeLayer === key}
             >
               <i className="layer-dot" aria-hidden="true" />
-              <span>{layer.label}</span>
-              <strong>{layerTotals[key]}</strong>
+              <span className="layer-copy">
+                <small>{layer.eyebrow}</small>
+                <strong>{layer.label}</strong>
+              </span>
+              <span className="layer-choice" aria-hidden="true">{activeLayer === key ? "✓" : ""}</span>
             </button>
           ))}
-          <article className="plan-summary" aria-label="Planes Provinciales identificados: 0">
-            <i className="layer-dot" aria-hidden="true" />
-            <span>Plan Provincial</span>
-            <strong>{meta.totals.provincialPlans}</strong>
-          </article>
+        </div>
+        <div className="coverage-summary" aria-label="Cobertura nacional del tablero">
+          <span><small>Cobertura territorial</small><strong>{meta.totals.provinces} provincias · 10 regiones</strong></span>
+          <span><small>Población</small><strong>{compactFormatter.format(totalPopulation)}</strong><em>Censo 2022</em></span>
+          <span><small>Proyectos registrados</small><strong>{numberFormatter.format(meta.totals.nationalInvestmentProjects)}</strong><em>Inversión 2026</em></span>
+          <span><small>Demandas consolidadas</small><strong>{numberFormatter.format(meta.totals.demands)}</strong><em>Agenda provincial</em></span>
+          <span className="document-coverage"><small>Documentos base</small><strong>{provincialDocumentData.documents.length}</strong><em>Word disponible</em></span>
         </div>
 
         <div className="selection-bar">
@@ -436,7 +441,7 @@ export function App() {
                 <div className="detail-heading">
                   <span>{selected.region}</span>
                   <h2>{selected.name}</h2>
-                  <p>{numberFormatter.format(selected.population)} habitantes · Censo 2022</p>
+                  <p>{numberFormatter.format(selected.population)} habitantes · {selected.municipalityCount} municipios · Censo 2022</p>
                 </div>
 
                 <div className="plan-status">
@@ -450,14 +455,26 @@ export function App() {
 
                 <section className="detail-section">
                   <div className="detail-section-title">
-                    <span>Diagnóstico</span>
-                    <small>Indicadores disponibles</small>
+                    <span>Indicadores de contexto</span>
+                    <small>No definen prioridades</small>
                   </div>
-                  <div className="metric-grid">
-                    <div><span>Municipios</span><strong>{selected.municipalityCount}</strong></div>
-                    <div><span>Homicidios / 100 mil</span><strong>{decimalFormatter.format(selected.diagnosis.homicideRate)}</strong><small>{selected.diagnosis.homicideYear}</small></div>
-                    <div><span>Hacinamiento extremo</span><strong>{percent(selected.diagnosis.extremeOvercrowdingPct)}</strong><small>{selected.diagnosis.overcrowdingYear}</small></div>
-                    <div><span>Centros INAIPI</span><strong>{numberFormatter.format(selected.diagnosis.inaipiCenters)}</strong></div>
+                  <p className="context-intro">Una lectura inicial para orientar la consulta del diagnóstico completo.</p>
+                  <div className="context-list">
+                    <div>
+                      <span><small>Vivienda</small><b>Hacinamiento extremo</b></span>
+                      <strong>{percent(selected.diagnosis.extremeOvercrowdingPct)}</strong>
+                      <em>{selected.diagnosis.overcrowdingYear || "Último dato"}</em>
+                    </div>
+                    <div>
+                      <span><small>Primera infancia</small><b>Centros INAIPI</b></span>
+                      <strong>{numberFormatter.format(selected.diagnosis.inaipiCenters)}</strong>
+                      <em>Registros disponibles</em>
+                    </div>
+                    <div>
+                      <span><small>Equipamiento</small><b>Instalaciones deportivas</b></span>
+                      <strong>{numberFormatter.format(selected.diagnosis.sportsFacilities)}</strong>
+                      <em>Inventario 2025</em>
+                    </div>
                   </div>
                 </section>
 
@@ -503,7 +520,7 @@ export function App() {
                 <h2>Seleccione una provincia</h2>
                 <p>
                   Haga clic en el mapa o utilice los selectores para consultar
-                  diagnóstico, inversión, demandas y estado del Plan Provincial.
+                  territorio, diagnóstico, inversión, demandas y documento base.
                 </p>
                 <div className="empty-list">
                   <span>01 <b>Diagnóstico territorial</b></span>

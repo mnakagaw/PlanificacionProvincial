@@ -66,7 +66,12 @@ test("publishes one provincial-plan base document for all 32 provinces", async (
   const appSource = await readFile(new URL("../src/App.jsx", import.meta.url), "utf8");
   assert.match(appSource, /Descargar documento base del Plan Provincial \(Word\)/);
   assert.match(appSource, /provincialDocuments\.get\(selected\.key\)/);
+  assert.match(appSource, /¿Qué quiere comparar en el mapa\?/);
+  assert.match(appSource, /Indicadores de contexto/);
+  assert.match(appSource, /Instalaciones deportivas/);
   assert.doesNotMatch(appSource, /MTS_BASE_DOCUMENT/);
+  assert.doesNotMatch(appSource, /Homicidios \/ 100 mil/);
+  assert.doesNotMatch(appSource, /Planes Provinciales identificados: 0/);
   assert.doesNotMatch(appSource, /14000000_Plan_Provincial/);
   assert.doesNotMatch(appSource, /no constituye un plan aprobado/i);
 });

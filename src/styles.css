@@ -185,23 +185,47 @@ footer {
   max-width: 395px;
 }
 
+.map-reading-heading {
+  align-items: end;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding: 0 2px;
+}
+
+.map-reading-heading > div {
+  display: grid;
+  gap: 3px;
+}
+
+.map-reading-heading strong {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.map-reading-heading span,
+.map-reading-heading > small {
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.45;
+}
+
 .layer-switcher {
   display: grid;
   gap: 10px;
-  grid-template-columns: repeat(5, 1fr);
-  margin-bottom: 14px;
+  grid-template-columns: repeat(4, 1fr);
+  margin-bottom: 10px;
 }
 
-.layer-switcher button,
-.plan-summary {
+.layer-switcher button {
   align-items: center;
   background: white;
   border: 1px solid var(--line);
   border-radius: 12px;
   display: flex;
   gap: 11px;
-  min-height: 76px;
-  padding: 13px 18px;
+  min-height: 72px;
+  padding: 12px 16px;
   text-align: left;
   transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
 }
@@ -229,24 +253,84 @@ footer {
   width: 11px;
 }
 
-.layer-switcher button > span,
-.plan-summary > span {
+.layer-copy {
+  display: grid;
+  gap: 3px;
+}
+
+.layer-copy small {
   color: var(--muted);
-  font-size: 10px;
-  margin-left: auto;
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
-.layer-switcher strong,
-.plan-summary strong {
+.layer-copy strong {
   color: var(--ink);
-  font-size: 22px;
-  font-weight: 650;
-  letter-spacing: -0.035em;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
 }
 
-.plan-summary {
-  --layer-accent: #d7aa55;
-  margin: 0;
+.layer-choice {
+  color: var(--layer-accent);
+  font-size: 14px;
+  font-weight: 800;
+  margin-left: auto;
+  min-width: 14px;
+  text-align: center;
+}
+
+.coverage-summary {
+  background: #f0f5f3;
+  border: 1px solid #d4dfdb;
+  border-radius: 12px;
+  display: grid;
+  grid-template-columns: 1.45fr repeat(4, 1fr);
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+
+.coverage-summary > span {
+  align-content: center;
+  border-left: 1px solid #d4dfdb;
+  display: grid;
+  gap: 2px;
+  min-height: 58px;
+  padding: 9px 15px;
+}
+
+.coverage-summary > span:first-child {
+  border-left: 0;
+}
+
+.coverage-summary small {
+  color: var(--muted);
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.coverage-summary strong {
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.coverage-summary em {
+  color: #899791;
+  font-size: 7px;
+  font-style: normal;
+}
+
+.coverage-summary .document-coverage {
+  background: #e8f2ee;
+}
+
+.coverage-summary .document-coverage strong {
+  color: var(--green);
 }
 
 .selection-bar {
@@ -597,34 +681,64 @@ footer {
   font-size: 7px;
 }
 
-.metric-grid {
-  display: grid;
-  gap: 7px;
-  grid-template-columns: repeat(2, 1fr);
+.context-intro {
+  color: var(--muted);
+  font-size: 8px;
+  line-height: 1.45;
+  margin: -4px 0 10px;
 }
 
-.metric-grid > div {
+.context-list {
+  display: grid;
+  gap: 6px;
+}
+
+.context-list > div {
+  align-items: center;
   background: #f5f8f6;
   border-radius: 8px;
   display: grid;
-  gap: 2px;
-  min-height: 62px;
-  padding: 9px;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  min-height: 50px;
+  padding: 8px 10px;
 }
 
-.metric-grid span {
+.context-list span {
+  display: grid;
+  gap: 2px;
+}
+
+.context-list small {
   color: var(--muted);
   font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
-.metric-grid strong {
-  font-size: 19px;
-  font-weight: 600;
+.context-list b {
+  color: var(--ink);
+  font-size: 9px;
+  font-weight: 650;
 }
 
-.metric-grid small {
+.context-list strong {
+  font-size: 18px;
+  font-weight: 650;
+  grid-column: 2;
+  grid-row: 1;
+  text-align: right;
+}
+
+.context-list em {
   color: #8b9993;
   font-size: 7px;
+  font-style: normal;
+  grid-column: 2;
+  grid-row: 1;
+  margin-top: 27px;
+  text-align: right;
 }
 
 .money-value {
@@ -954,8 +1068,7 @@ footer > span {
     min-height: 520px;
   }
 
-  .layer-switcher button,
-  .plan-summary {
+  .layer-switcher button {
     padding: 12px;
   }
 }
@@ -963,6 +1076,19 @@ footer > span {
 @media (max-width: 900px) {
   .layer-switcher {
     grid-template-columns: repeat(3, 1fr);
+  }
+
+  .coverage-summary {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .coverage-summary > span:nth-child(4) {
+    border-left: 0;
+    border-top: 1px solid #d4dfdb;
+  }
+
+  .coverage-summary > span:nth-child(5) {
+    border-top: 1px solid #d4dfdb;
   }
 
   .workspace {
@@ -1034,8 +1160,34 @@ footer > span {
     gap: 13px;
   }
 
+  .map-reading-heading {
+    align-items: start;
+    display: grid;
+    gap: 5px;
+  }
+
   .layer-switcher {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .coverage-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .coverage-summary > span,
+  .coverage-summary > span:nth-child(4),
+  .coverage-summary > span:nth-child(5) {
+    border-left: 1px solid #d4dfdb;
+    border-top: 1px solid #d4dfdb;
+  }
+
+  .coverage-summary > span:nth-child(even) {
+    border-left: 0;
+  }
+
+  .coverage-summary > span:first-child {
+    border-top: 0;
+    grid-column: 1 / -1;
   }
 
   .selection-bar {
@@ -1101,21 +1253,29 @@ footer > span {
 }
 
 @media (max-width: 440px) {
-  .layer-switcher button,
-  .plan-summary {
+  .layer-switcher button {
     gap: 8px;
     min-height: 68px;
     padding: 10px;
   }
 
-  .layer-switcher button > span,
-  .plan-summary > span {
-    font-size: 9px;
+  .layer-copy strong {
+    font-size: 13px;
   }
 
-  .layer-switcher strong,
-  .plan-summary strong {
-    font-size: 19px;
+  .coverage-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .coverage-summary > span,
+  .coverage-summary > span:nth-child(4),
+  .coverage-summary > span:nth-child(5) {
+    border-left: 0;
+    border-top: 1px solid #d4dfdb;
+  }
+
+  .coverage-summary > span:first-child {
+    border-top: 0;
   }
 
   .map-canvas,
@@ -1125,6 +1285,11 @@ footer > span {
 
   .detail-panel {
     padding: 17px;
+  }
+
+  .detail-heading h2 {
+    font-size: 29px;
+    line-height: 1.05;
   }
 }
 
