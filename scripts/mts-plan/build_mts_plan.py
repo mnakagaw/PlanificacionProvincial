@@ -7,12 +7,15 @@ import re
 import shutil
 import unicodedata
 import urllib.request
+import argparse
 from collections import Counter
+from datetime import datetime
 from pathlib import Path
 
 import openpyxl
 from PIL import Image, ImageDraw, ImageFont
 from docx import Document
+from docx.enum.section import WD_ORIENT, WD_SECTION
 from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT, WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_BREAK
 from docx.oxml import OxmlElement
@@ -31,10 +34,12 @@ MANIFEST_PATH = PROJECT / "src" / "data" / "provincial-documents.json"
 
 DASHBOARD_URL = "https://prodecare.net/DDPT/Dashboard-Territorial/data/territorial-dashboard.json"
 DEMANDS_URL = "https://prodecare.net/DDPT/DemandasProvinciales/data/demandas_consolidadas_003.xlsx"
+INVESTMENT_URL = "https://prodecare.net/DDPT/IPRegional2/data/mapa_inversion.json"
 REFERENCE_URL = "https://prodecare.net/DDPT/planificacion-municipal/downloads/pmd-borradores/03140002_PMD_cabrera_Borrador_Tecnico_2025-2028.docx"
 
 DASHBOARD_PATH = TEMP / "territorial-dashboard.json"
 DEMANDS_PATH = TEMP / "demandas_consolidadas_003.xlsx"
+INVESTMENT_PATH = TEMP / "mapa_inversion_2026-08-02.json"
 REFERENCE_PATH = TEMP / "03140002_PMD_cabrera_Borrador_Tecnico_2025-2028.docx"
 
 PROVINCE = "María Trinidad Sánchez"
@@ -157,6 +162,47 @@ def format_rd_billions(value: float) -> str:
     return f"RD${value / 1e9:.2f} mil millones"
 
 
+def format_rd(value) -> str:
+    if value is None or value == "":
+        return "Sin dato"
+    return f"RD$ {float(value):,.2f}"
+
+
+def format_percent(value, *, ratio=False) -> str:
+    if value is None or value == "":
+        return "Sin dato"
+    number = float(value) * 100 if ratio else float(value)
+    return f"{number:.2f}%"
+
+
+def format_date(value) -> str:
+    if not value:
+        return "Sin dato"
+    try:
+        return datetime.fromisoformat(str(value).replace("Z", "+00:00")).strftime("%d-%m-%Y")
+    except ValueError:
+        return str(value)
+
+
+def format_timestamp(value) -> str:
+    if not value:
+        return "Sin dato"
+    try:
+        parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        return parsed.strftime("%d-%m-%Y %H:%M UTC")
+    except ValueError:
+        return str(value)
+
+
+def yes_no(value) -> str:
+    return "Sí" if value else "No"
+
+
+def join_values(values, empty="Sin registro") -> str:
+    clean = [str(value).strip() for value in (values or []) if str(value).strip()]
+    return "; ".join(clean) if clean else empty
+
+
 def demand_phrase(count: int) -> str:
     return "1 demanda" if count == 1 else f"{count} demandas"
 
@@ -229,6 +275,51 @@ def parse_demands(path: Path):
         )
     workbook.close()
     return rows
+
+
+def select_investment_projects(investment_data):
+    projects = [
+        item
+        for item in investment_data.get("projects", [])
+        if any(normalize(name) == normalize(PROVINCE) for name in item.get("provinces", []))
+    ]
+
+    def sort_key(item):
+        code = str(item.get("code") or "")
+        return (0, int(code)) if code.isdigit() else (1, code, item.get("name") or "")
+
+    return sorted(projects, key=sort_key)
+
+
+def summarize_investment_projects(projects, year):
+    budget = sum(float(item.get("budget") or 0) for item in projects)
+    executed = sum(float(item.get("executed") or 0) for item in projects)
+    sector_counts = Counter(
+        sector
+        for item in projects
+        for sector in item.get("sectors", [])
+        if str(sector).strip()
+    )
+    return {
+        "year": year,
+        "projectCount": len(projects),
+        "budget": budget,
+        "executed": executed,
+        "executionPct": (executed / budget * 100) if budget else 0,
+        "projectsWithExecution": sum(float(item.get("executed") or 0) > 0 for item in projects),
+        "projectsWithActiveContracts": sum(int(item.get("activeContracts") or 0) > 0 for item in projects),
+        "topSector": sector_counts.most_common(1)[0][0] if sector_counts else "Sin sector identificado",
+    }
+
+
+def project_location_rows(project):
+    rows = []
+    for location in project.get("locations", []):
+        region = " ".join(part for part in [str(location.get("regionId") or ""), str(location.get("region") or "")] if part)
+        province = " ".join(part for part in [str(location.get("provinceId") or ""), str(location.get("province") or "")] if part)
+        municipality = " ".join(part for part in [str(location.get("municipalityId") or ""), str(location.get("municipality") or "")] if part)
+        rows.append(" · ".join(part for part in [region, province, municipality] if part))
+    return "; ".join(rows) if rows else "Sin localización codificada"
 
 
 def shorten_institution(value: str) -> str:
@@ -505,6 +596,7 @@ def build_plates(facts):
     urban = facts["urban_rural"]
     households = facts["households"]
     pyramid = facts["pyramid"]
+    pyramid_2010 = facts["pyramid_2010"]
     education_level = facts["education_level"]
     education = facts["education"]
     economy = facts["economy"]
@@ -559,38 +651,79 @@ def build_plates(facts):
     # Lámina 2 — Estructura demográfica y hogares
     image = make_canvas()
     draw = ImageDraw.Draw(image)
-    plate_header(draw, "Diagnóstico provincial · Estructura demográfica", PROVINCE, "Censo 2022")
+    plate_header(draw, "Diagnóstico provincial · Estructura demográfica", PROVINCE, "Censos 2010 y 2022")
     metric_card(draw, (70, 145, 370, 270), "Hogares", f"{households['hogares_total']:,}", COLORS["blue"], "hogares censados")
     metric_card(draw, (395, 145, 695, 270), "Población en hogares", f"{households['poblacion_en_hogares']:,}", COLORS["green"], "personas")
     metric_card(draw, (720, 145, 1020, 270), "Personas por hogar", f"{households['personas_por_hogar']:.2f}", COLORS["purple"], "promedio")
     all_age = pyramid["age_groups"]
     male_total = sum(item["male"] for item in all_age)
     female_total = sum(item["female"] for item in all_age)
-    metric_card(draw, (1045, 145, 1230, 270), "H / M", f"{male_total / (male_total + female_total) * 100:.1f} / {female_total / (male_total + female_total) * 100:.1f}", COLORS["orange"], "%")
-    section_card(draw, (70, 305, 1230, 1160), "Pirámide de población 2022")
-    age_groups = [item for item in all_age if item["age_group"] != "No declarado"]
-    age_groups = list(reversed(age_groups))
-    max_age = max(max(item["male"], item["female"]) for item in age_groups)
-    center = 650
-    top, bottom = 385, 1085
-    row_h = (bottom - top) / len(age_groups)
-    half_width = 480
-    for i, item in enumerate(age_groups):
-        cy = top + (i + 0.5) * row_h
-        mw = half_width * item["male"] / max_age
-        fw = half_width * item["female"] / max_age
-        draw.rectangle((center - mw, cy - row_h * 0.36, center, cy + row_h * 0.36), fill=rgb(COLORS["blue"]))
-        draw.rectangle((center, cy - row_h * 0.36, center + fw, cy + row_h * 0.36), fill=rgb(COLORS["red"]))
-        if i % 2 == 0:
-            draw.text((center, cy), item["age_group"].strip(), font=font(12), fill=rgb(COLORS["ink"]), anchor="mm")
-    draw.line((center, top - 10, center, bottom + 10), fill=rgb(COLORS["white"]), width=2)
-    draw.text((255, 1120), "Hombres", font=font(18, True), fill=rgb(COLORS["blue"]), anchor="mm")
-    draw.text((1045, 1120), "Mujeres", font=font(18, True), fill=rgb(COLORS["red"]), anchor="mm")
+    metric_card(draw, (1045, 145, 1230, 270), "H / M 2022", f"{male_total / (male_total + female_total) * 100:.1f} / {female_total / (male_total + female_total) * 100:.1f}", COLORS["orange"], "%")
+
+    def canonical_age_label(value):
+        label = unicodedata.normalize("NFD", str(value or "").lower())
+        label = "".join(ch for ch in label if unicodedata.category(ch) != "Mn")
+        label = label.replace("anos", "").strip()
+        if label in {"menos de 1", "menor de 1"}:
+            return "<1"
+        if label in {"100 o mas", "100 y mas"}:
+            return "100+"
+        match = re.search(r"(\d+)\s*-\s*(\d+)", label)
+        return f"{match.group(1)}-{match.group(2)}" if match else label
+
+    age_order = [
+        "100+", "95-99", "90-94", "85-89", "80-84", "75-79", "70-74", "65-69",
+        "60-64", "55-59", "50-54", "45-49", "40-44", "35-39", "30-34", "25-29",
+        "20-24", "15-19", "10-14", "5-9", "1-4", "<1",
+    ]
+    age_2022 = {
+        canonical_age_label(item["age_group"]): item
+        for item in all_age
+        if item["age_group"] != "No declarado"
+    }
+    age_2010 = {canonical_age_label(item["age_group"]): item for item in pyramid_2010}
+    shared_max = max(
+        max(item[sex] for item in list(age_2022.values()) + list(age_2010.values()) for sex in ("male", "female")),
+        1,
+    )
+
+    def draw_pyramid_panel(box, title, values, male_color, female_color, missing_label=False):
+        x1, y1, x2, y2 = box
+        section_card(draw, box, title)
+        center = (x1 + x2) / 2
+        top, bottom = y1 + 80, y2 - 70
+        row_h = (bottom - top) / len(age_order)
+        half_width = (x2 - x1 - 130) / 2
+        center_gap = 29
+        for i, age_label in enumerate(age_order):
+            cy = top + (i + 0.5) * row_h
+            item = values.get(age_label)
+            if item:
+                mw = half_width * item["male"] / shared_max
+                fw = half_width * item["female"] / shared_max
+                draw.rectangle(
+                    (center - center_gap - mw, cy - row_h * 0.35, center - center_gap, cy + row_h * 0.35),
+                    fill=rgb(male_color),
+                )
+                draw.rectangle(
+                    (center + center_gap, cy - row_h * 0.35, center + center_gap + fw, cy + row_h * 0.35),
+                    fill=rgb(female_color),
+                )
+            elif missing_label:
+                draw.text((center + center_gap + 14, cy), "s/d", font=font(10, True), fill=rgb(COLORS["muted"]), anchor="lm")
+            draw.text((center, cy), age_label, font=font(10), fill=rgb(COLORS["ink"]), anchor="mm")
+        draw.line((center - center_gap, top - 6, center - center_gap, bottom + 6), fill=rgb(COLORS["line"]), width=1)
+        draw.line((center + center_gap, top - 6, center + center_gap, bottom + 6), fill=rgb(COLORS["line"]), width=1)
+        draw.text((center - 125, y2 - 33), "Hombres", font=font(15, True), fill=rgb(male_color), anchor="mm")
+        draw.text((center + 125, y2 - 33), "Mujeres", font=font(15, True), fill=rgb(female_color), anchor="mm")
+
+    draw_pyramid_panel((70, 305, 640, 1160), "Pirámide 2022 · color", age_2022, COLORS["blue"], COLORS["red"])
+    draw_pyramid_panel((660, 305, 1230, 1160), "Pirámide 2010 · escala de grises", age_2010, "#59666B", "#AEB7BA", missing_label=True)
     age_0_14 = sum(item["male"] + item["female"] for item in all_age[:4])
     age_65 = sum(item["male"] + item["female"] for item in all_age[15:] if item["age_group"] != "No declarado")
     population_pyramid = male_total + female_total
     age_15_64 = population_pyramid - age_0_14 - age_65
-    section_card(draw, (70, 1195, 1230, 1465), "Composición por grandes grupos", COLORS["pale_green"])
+    section_card(draw, (70, 1195, 1230, 1465), "Composición 2022 por grandes grupos", COLORS["pale_green"])
     horizontal_bars(
         draw,
         (105, 1265, 1190, 1430),
@@ -600,7 +733,7 @@ def build_plates(facts):
         value_format=lambda value: f"{value / population_pyramid * 100:.1f}%",
         max_value=max(age_0_14, age_15_64, age_65),
     )
-    plate_footer(draw, "Fuente: X Censo Nacional de Población y Vivienda 2022, ONE. Los grupos deben cruzarse con sexo y localización antes de decidir.")
+    plate_footer(draw, "Fuente: IX Censo 2010 y X Censo 2022, ONE. La serie 2010 disponible inicia en 1-4 años; 's/d' indica dato no disponible.")
     paths.append(save_plate(image, "lamina_02_demografia.png"))
 
     # Lámina 3 — Servicios y condición de vida
@@ -836,8 +969,9 @@ def build_plates(facts):
     plate_header(draw, "Diagnóstico provincial · Inversión pública", PROVINCE, "Series y corte 2026")
     inv_series = metrics["investment"]["series"]
     metric_card(draw, (70, 145, 350, 270), "Proyectos 2026", f"{investment_2026['projectCount']:,}", COLORS["blue"], "asociados a la provincia")
-    metric_card(draw, (370, 145, 650, 270), "Presupuesto 2026", f"RD$ {investment_2026['budget']/1e9:.2f} mil M", COLORS["green"], "corte 31-07-2026")
-    metric_card(draw, (670, 145, 950, 270), "Ejecutado 2026", f"RD$ {investment_2026['executed']/1e9:.2f} mil M", COLORS["green"], "corte 31-07-2026")
+    investment_as_of = format_date(facts["investment_meta"].get("asOf"))
+    metric_card(draw, (370, 145, 650, 270), "Presupuesto 2026", f"RD$ {investment_2026['budget']/1e9:.2f} mil M", COLORS["green"], f"corte {investment_as_of}")
+    metric_card(draw, (670, 145, 950, 270), "Ejecutado 2026", f"RD$ {investment_2026['executed']/1e9:.2f} mil M", COLORS["green"], f"corte {investment_as_of}")
     metric_card(draw, (970, 145, 1230, 270), "Ejecución 2026", f"{investment_2026['executionPct']:.1f}%", COLORS["orange"], f"{investment_2026['projectsWithExecution']} proyectos con ejecución")
     section_card(draw, (70, 305, 1230, 1045), "Presupuesto y ejecución registrada · 2018–2025")
     grouped_bars(
@@ -857,7 +991,7 @@ def build_plates(facts):
     draw_wrapped(draw, (110, 1205), f"Sector más frecuente por número de proyectos: {investment_2026['topSector']}. Hay {investment_2026['projectsWithActiveContracts']} proyectos con contratos activos registrados.", font(16), COLORS["muted"], 1050, 4, 3)
     section_card(draw, (70, 1310, 1230, 1465), "Pregunta para el CDP", COLORS["pale_blue"])
     draw_wrapped(draw, (105, 1360), "¿Qué inversiones responden a brechas verificadas, cuáles se concentran territorialmente y cuáles requieren coordinación, secuenciación o revisión de ejecución? La serie histórica y el corte 2026 no deben compararse sin revisar metodología y fecha.", font(17), COLORS["ink"], 1080, 5, 4)
-    plate_footer(draw, "Fuente: Dashboard Territorial (serie 2018–2025) e Inversión Pública Territorial, corte 31-07-2026.")
+    plate_footer(draw, f"Fuente: Dashboard Territorial (serie 2018–2025) e Inversión Pública Territorial, corte {investment_as_of}.")
     paths.append(save_plate(image, "lamina_08_inversion.png"))
 
     # Lámina 9 — Construcción y demandas
@@ -973,9 +1107,34 @@ def set_repeat_table_header(row):
     tr_pr.append(tbl_header)
 
 
+def set_table_geometry(table, widths):
+    width_dxa = [int(width * 1440) for width in widths]
+    table_pr = table._tbl.tblPr
+    table_width = table_pr.find(qn("w:tblW"))
+    if table_width is None:
+        table_width = OxmlElement("w:tblW")
+        table_pr.append(table_width)
+    table_width.set(qn("w:w"), str(sum(width_dxa)))
+    table_width.set(qn("w:type"), "dxa")
+    table_indent = table_pr.find(qn("w:tblInd"))
+    if table_indent is None:
+        table_indent = OxmlElement("w:tblInd")
+        table_pr.append(table_indent)
+    table_indent.set(qn("w:w"), "0")
+    table_indent.set(qn("w:type"), "dxa")
+    grid = table._tbl.tblGrid
+    for child in list(grid):
+        grid.remove(child)
+    for value in width_dxa:
+        column = OxmlElement("w:gridCol")
+        column.set(qn("w:w"), str(value))
+        grid.append(column)
+
+
 def style_table(table, widths, header=True, font_size=9, alternating=True):
     table.alignment = WD_TABLE_ALIGNMENT.CENTER
     table.autofit = False
+    set_table_geometry(table, widths)
     for row_index, row in enumerate(table.rows):
         if row_index == 0 and header:
             set_repeat_table_header(row)
@@ -1029,7 +1188,7 @@ def add_page_field(paragraph):
     run._r.extend([begin, instruction, separate, text_node, end])
 
 
-def add_hyperlink(paragraph, text, url):
+def add_hyperlink(paragraph, text, url, font_size=10):
     relationship_id = paragraph.part.relate_to(url, RT.HYPERLINK, is_external=True)
     hyperlink = OxmlElement("w:hyperlink")
     hyperlink.set(qn("r:id"), relationship_id)
@@ -1044,7 +1203,7 @@ def add_hyperlink(paragraph, text, url):
     fonts.set(qn("w:hAnsi"), "Calibri")
     fonts.set(qn("w:eastAsia"), "Calibri")
     size = OxmlElement("w:sz")
-    size.set(qn("w:val"), "20")
+    size.set(qn("w:val"), str(int(font_size * 2)))
     run_properties.extend([fonts, color, underline, size])
     run.append(run_properties)
     text_node = OxmlElement("w:t")
@@ -1106,22 +1265,17 @@ def configure_styles(doc):
         style.paragraph_format.keep_with_next = True
 
 
-def configure_header_footer(doc):
-    section = doc.sections[0]
-    section.page_width = Inches(8.5)
-    section.page_height = Inches(11)
-    section.left_margin = Inches(1)
-    section.right_margin = Inches(1)
-    section.top_margin = Inches(0.82)
-    section.bottom_margin = Inches(0.78)
+def configure_section_header_footer(section, content_width):
     section.header_distance = Inches(0.35)
     section.footer_distance = Inches(0.35)
     header = section.header
+    header.is_linked_to_previous = False
     clear_container(header)
-    table = header.add_table(rows=1, cols=2, width=Inches(6.5))
+    table = header.add_table(rows=1, cols=2, width=Inches(content_width))
     table.autofit = False
-    set_cell_width(table.cell(0, 0), 3.25)
-    set_cell_width(table.cell(0, 1), 3.25)
+    set_table_geometry(table, [content_width / 2, content_width / 2])
+    set_cell_width(table.cell(0, 0), content_width / 2)
+    set_cell_width(table.cell(0, 1), content_width / 2)
     for cell in table.rows[0].cells:
         set_cell_margins(cell, 0, 0, 0, 0)
     left = table.cell(0, 0).paragraphs[0]
@@ -1134,6 +1288,7 @@ def configure_header_footer(doc):
     run = right.add_run(f"{PROVINCE} · {TERRITORIAL_CODE}")
     set_run_font(run, size=7.5, color="65777E")
     footer = section.footer
+    footer.is_linked_to_previous = False
     clear_container(footer)
     paragraph = footer.add_paragraph()
     paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -1141,6 +1296,43 @@ def configure_header_footer(doc):
     run = paragraph.add_run(f"{PROVINCE} · Documento base para formulación · ")
     set_run_font(run, size=7.5, color="65777E")
     add_page_field(paragraph)
+
+
+def configure_header_footer(doc):
+    section = doc.sections[0]
+    section.page_width = Inches(8.5)
+    section.page_height = Inches(11)
+    section.left_margin = Inches(1)
+    section.right_margin = Inches(1)
+    section.top_margin = Inches(0.82)
+    section.bottom_margin = Inches(0.78)
+    configure_section_header_footer(section, 6.5)
+
+
+def add_landscape_section(doc):
+    section = doc.add_section(WD_SECTION.NEW_PAGE)
+    section.orientation = WD_ORIENT.LANDSCAPE
+    section.page_width = Inches(11)
+    section.page_height = Inches(8.5)
+    section.left_margin = Inches(0.5)
+    section.right_margin = Inches(0.5)
+    section.top_margin = Inches(0.62)
+    section.bottom_margin = Inches(0.58)
+    configure_section_header_footer(section, 10.0)
+    return section
+
+
+def add_portrait_section(doc):
+    section = doc.add_section(WD_SECTION.NEW_PAGE)
+    section.orientation = WD_ORIENT.PORTRAIT
+    section.page_width = Inches(8.5)
+    section.page_height = Inches(11)
+    section.left_margin = Inches(1)
+    section.right_margin = Inches(1)
+    section.top_margin = Inches(0.82)
+    section.bottom_margin = Inches(0.78)
+    configure_section_header_footer(section, 6.5)
+    return section
 
 
 def add_body_paragraph(doc, text, bold_lead=None, small=False, source=False, center=False):
@@ -1196,6 +1388,132 @@ def add_note_box(doc, title, text, fill="EEF7F4", title_color="13836D"):
 
 def page_break(doc):
     doc.add_page_break()
+
+
+def align_table_columns(table, *, center=(), right=()):
+    for row in table.rows[1:]:
+        for column_index, cell in enumerate(row.cells):
+            alignment = None
+            if column_index in center:
+                alignment = WD_ALIGN_PARAGRAPH.CENTER
+            elif column_index in right:
+                alignment = WD_ALIGN_PARAGRAPH.RIGHT
+            if alignment is not None:
+                for paragraph in cell.paragraphs:
+                    paragraph.alignment = alignment
+
+
+def add_investment_appendix(doc, facts):
+    projects = facts["investment_projects"]
+    investment = facts["investment_2026"]
+    source_date = format_date(facts["investment_meta"].get("asOf"))
+
+    add_landscape_section(doc)
+    doc.add_heading("Anexo B. Proyectos de inversión pública asociados", level=1)
+    add_body_paragraph(
+        doc,
+        f"El corte administrativo del {source_date} asocia {len(projects)} proyectos a {PROVINCE}. "
+        "Se muestran todos los registros y todos los campos sustantivos y de trazabilidad disponibles en la fuente. "
+        "La asociación territorial no implica que el monto completo sea exclusivo de la provincia cuando el proyecto cubre más de un territorio.",
+    )
+    summary = add_table(
+        doc,
+        ["Proyectos", "Presupuesto 2026", "Ejecutado 2026", "Ejecución presupuestaria 2026"],
+        [[len(projects), format_rd(investment["budget"]), format_rd(investment["executed"]), format_percent(investment["executionPct"])]],
+        [1.2, 2.6, 2.6, 2.6],
+        font_size=9,
+        alternating=False,
+    )
+    align_table_columns(summary, center=(0,), right=(1, 2, 3))
+    add_note_box(
+        doc,
+        "Cómo leer los porcentajes",
+        "La ejecución presupuestaria 2026 se calcula como ejecutado 2026 dividido entre presupuesto 2026. "
+        "Los avances físico y financiero proceden del perfil general del proyecto y pueden cubrir períodos distintos; no deben interpretarse como el mismo indicador.",
+        fill="EEF5FA",
+        title_color="2E74B5",
+    )
+
+    doc.add_heading("B.1 Cartera completa de inversión pública asociada", level=2)
+    portfolio_rows = []
+    for number, project in enumerate(projects, 1):
+        institutions = project.get("institutions") or ([project.get("institution")] if project.get("institution") else [])
+        budget = float(project.get("budget") or 0)
+        executed = float(project.get("executed") or 0)
+        execution = format_percent(executed / budget * 100) if budget else "No calculable"
+        source_coverage = (
+            f"Maestro {yes_no(project.get('inMaster'))} · Ppto. {yes_no(project.get('inBudget'))}\n"
+            f"Territorio {yes_no(project.get('inTerritory'))} · CSV territ. {yes_no(project.get('inTerritoryCsv'))}\n"
+            f"Perfil {yes_no(project.get('inProfile'))}"
+        )
+        identification = (
+            f"SNIP {project.get('code') or 'Sin dato'}\n"
+            f"Ficha/Mapa {project.get('mapProjectId') or 'Sin dato'}\n"
+            f"Fuentes:\n{source_coverage}"
+        )
+        project_detail = (
+            f"{project.get('name') or 'Sin dato'}\n"
+            f"Institución(es): {join_values(institutions)}\n"
+            f"Sector(es): {join_values(project.get('sectors'))}\n"
+            f"Territorios declarados: región {project.get('region') or 'Sin dato'}; "
+            f"provincia(s) {join_values(project.get('provinces'))}; "
+            f"municipio(s) {join_values(project.get('municipalities'))}\n"
+            f"Localización codificada: {project_location_rows(project)}\n"
+            f"Ubicación del perfil: {join_values(project.get('profileLocations'))}\n"
+            f"Fuente territorial: {project.get('locationSource') or 'Sin dato'} · "
+            f"alcance {project.get('locationScope') or 'Sin dato'} · "
+            f"verificada {format_timestamp(project.get('locationVerifiedAt'))}\n"
+            f"Cobertura: nacional {yes_no(project.get('national'))} · multirregional {yes_no(project.get('multiregional'))}"
+        )
+        status_detail = (
+            f"Estado: {project.get('state') or 'Sin dato'}\n"
+            f"Período: {format_date(project.get('start'))} – {format_date(project.get('end'))}\n"
+            f"Avance físico: {format_percent(project.get('physicalProgress'), ratio=True)}\n"
+            f"Avance financiero: {format_percent(project.get('financialProgress'), ratio=True)}\n"
+            f"Contratos: {int(project.get('contracts') or 0)} total · {int(project.get('activeContracts') or 0)} activos\n"
+            f"Seguimiento: {project.get('tracking') or 'Sin dato'}"
+        )
+        finance_detail = (
+            f"Costo del proyecto: {format_rd(project.get('projectCost'))}\n"
+            f"Presupuesto 2026: {format_rd(budget)}\n"
+            f"Ejecutado 2026: {format_rd(executed)}\n"
+            f"Ejecución 2026: {execution}"
+        )
+        portfolio_rows.append(
+            (
+                number,
+                identification,
+                project_detail,
+                status_detail,
+                finance_detail,
+            )
+        )
+    portfolio_table = add_table(
+        doc,
+        ["N.º", "Identificación", "Proyecto / institución / territorio", "Estado / período / avances", "Costos y ejecución"],
+        portfolio_rows,
+        [0.4, 1.15, 4.15, 2.0, 2.1],
+        font_size=7.0,
+        alternating=True,
+    )
+    align_table_columns(portfolio_table, center=(0,))
+    for row, project in zip(portfolio_table.rows[1:], projects):
+        paragraph = row.cells[1].paragraphs[0]
+        if project.get("projectUrl"):
+            paragraph.add_run("\n")
+            add_hyperlink(paragraph, "Abrir proyecto", project["projectUrl"], font_size=7.0)
+        if project.get("contractUrl"):
+            paragraph.add_run("\n")
+            add_hyperlink(paragraph, "Abrir contratos", project["contractUrl"], font_size=7.0)
+
+    add_note_box(
+        doc,
+        "Uso por el CDP",
+        "Esta relación documenta la cartera observada; no define prioridades ni nuevas acciones provinciales. "
+        "El CDP puede contrastar cada registro con las brechas del diagnóstico, verificar cobertura territorial, revisar ejecución y decidir qué asuntos requieren coordinación o seguimiento.",
+        fill="EEF7F4",
+        title_color="13836D",
+    )
 
 
 def build_document(facts, plate_paths):
@@ -1262,7 +1580,7 @@ def build_document(facts, plate_paths):
         ("3", "Lectura técnica y matriz de fortalezas/debilidades para validación"),
         ("4", "Agenda de concertación y registro de acuerdos del CDP"),
         ("5", "Visión, objetivos, resultados y plan de acción por acordar"),
-        ("Anexo", "Demandas provinciales consolidadas y fuentes de trazabilidad"),
+        ("Anexos", "Demandas provinciales, cartera completa de inversión pública y fuentes de trazabilidad"),
     ]
     add_table(doc, ["Parte", "Contenido"], contents, [0.65, 5.85], font_size=9)
     doc.add_heading("Síntesis ejecutiva", level=1)
@@ -1751,16 +2069,16 @@ def build_document(facts, plate_paths):
         fill="EEF5FA",
         title_color="2E74B5",
     )
-    if len(facts["demands"]) > 1:
-        page_break(doc)
+    add_investment_appendix(doc, facts)
+    add_portrait_section(doc)
 
     # Sources
     doc.add_heading("Fuentes y trazabilidad", level=1)
     source_rows = [
         ("ONE-2022", "X Censo Nacional de Población y Vivienda", "2022", "Población, hogares, servicios y educación", "Alta"),
-        ("DASH-DIAG", "Dashboard de Diagnóstico Territorial y datasets derivados", "2022 / 2024", "Comparaciones provincial/municipal, economía y equipamientos", "Alta / media según indicador"),
+        ("DASH-DIAG", "Dashboard de Diagnóstico Territorial y datasets derivados", "2010 / 2022 / 2024", "Pirámides poblacionales comparadas, economía y equipamientos", "Alta / media según indicador"),
         ("DASH-PROV", "Dashboard Territorial", "2001–2026", "Seguridad, condiciones sociales, equipamientos, inversión, vías y permisos", "Según ficha de fuente"),
-        ("INV-2026", "Inversión Pública Territorial", "2026", f"{facts['investment_2026']['projectCount']} proyectos, presupuesto y ejecución al 31-07-2026", "Corte administrativo"),
+        ("INV-2026", "Inversión Pública Territorial", "2026", f"{facts['investment_2026']['projectCount']} proyectos, presupuesto y ejecución al {format_date(facts['investment_meta'].get('asOf'))}", "Corte administrativo"),
         ("DEM-2026", "Demandas Provinciales · consolidado 003", "2026", f"{demand_phrase(len(facts['demands']))} de {PROVINCE}", "Registro del CDP"),
         ("LEY-498", "Ley núm. 498-06 de Planificación e Inversión Pública", "2006", "Arts. 14–15, 30 y 36–38", "Normativa oficial"),
         ("DEC-493", "Decreto núm. 493-07, Reglamento de Aplicación", "2007", "Arts. 4–15 y 57–61", "Normativa oficial"),
@@ -1769,7 +2087,7 @@ def build_document(facts, plate_paths):
     doc.add_heading("Enlaces de consulta", level=2)
     links = [
         ("Dashboard Territorial", "https://prodecare.net/DDPT/Dashboard-Territorial/"),
-        ("Inversión Pública Territorial", "https://prodecare.net/DDPT/InversionPublicaTerritorial/"),
+        ("Inversión Pública Territorial", "https://prodecare.net/DDPT/IPRegional2/"),
         ("Demandas Provinciales", "https://prodecare.net/DDPT/DemandasProvinciales/"),
         ("Planificación Municipal", "https://prodecare.net/DDPT/PlanificacionMunicipal/"),
         ("Ley núm. 498-06", "https://mepyd.gob.do/wp-content/uploads/drive/DIGEDES/Monitoreo%20y%20Evaluaci%C3%B3n/Publicaciones/Normativa/Ley-498-06%20Planificaci%C3%B3n%20e%20Inversi%C3%B3n%20P%C3%BAblica.pdf"),
@@ -1792,27 +2110,37 @@ def build_document(facts, plate_paths):
     return OUTPUT
 
 
-def collect_facts(dashboard=None, portal_data=None):
+def collect_facts(dashboard=None, portal_data=None, investment_data=None):
     TEMP.mkdir(parents=True, exist_ok=True)
     ensure_download(DASHBOARD_URL, DASHBOARD_PATH)
     ensure_download(DEMANDS_URL, DEMANDS_PATH)
+    ensure_download(INVESTMENT_URL, INVESTMENT_PATH)
     ensure_download(REFERENCE_URL, REFERENCE_PATH)
     dashboard = dashboard or load_json(DASHBOARD_PATH)
     province = next(item for item in dashboard["provinces"] if item["name"] == PROVINCE)
     municipalities = [item for item in dashboard["municipalities"] if item.get("province") == PROVINCE]
     portal_data = portal_data or load_json(PROJECT / "src" / "data" / "provinces.json")
     portal_record = next(item for item in portal_data["provinces"] if item["name"] == PROVINCE)
-    investment_2026 = portal_record["investment"]
+    investment_data = investment_data or load_json(INVESTMENT_PATH)
+    investment_projects = select_investment_projects(investment_data)
+    investment_2026 = summarize_investment_projects(investment_projects, investment_data["meta"]["year"])
     return {
         "province": province,
         "portal_record": portal_record,
         "municipalities": municipalities,
         "investment_2026": investment_2026,
+        "investment_projects": investment_projects,
+        "investment_meta": investment_data["meta"],
         "demands": parse_demands(DEMANDS_PATH),
         "geojson": load_json(PROJECT / "public" / "data" / "provinces.geojson"),
         "urban_rural": find_record(SOURCE_DATA / "poblacion_urbana_rural_provincia.json"),
         "households": find_record(SOURCE_DATA / "hogares_resumen_provincia.json"),
         "pyramid": find_record(SOURCE_DATA / "pyramids_provincia.json"),
+        "pyramid_2010": [
+            item
+            for item in load_json(SOURCE_DATA / "edad_sexo_2010_provincia.json")
+            if normalize(item.get("provincia")) == normalize(PROVINCE)
+        ],
         "condition": find_record(SOURCE_DATA / "condicion_vida_provincia.json"),
         "municipal_condition": [item for item in load_json(SOURCE_DATA / "condicion_vida.json") if item.get("provincia") == PROVINCE],
         "tic": find_record(SOURCE_DATA / "tic_provincia.json"),
@@ -1828,27 +2156,38 @@ def validate_facts(facts):
     assert facts["province"]["municipalityCount"] == len(facts["municipalities"])
     assert sum(item["population"] for item in facts["municipalities"]) == facts["province"]["population"]
     assert len(facts["demands"]) == facts["portal_record"]["demands"]
-    assert facts["urban_rural"] and facts["households"] and facts["pyramid"]
+    assert facts["urban_rural"] and facts["households"] and facts["pyramid"] and facts["pyramid_2010"]
     assert facts["condition"] and facts["tic"] and facts["education"] and facts["economy"] and facts["health"]
     municipal_condition_names = {normalize(item["municipio"]) for item in facts["municipal_condition"]}
     assert all(normalize(item["name"]) in municipal_condition_names for item in facts["municipalities"][:4])
     assert facts["investment_2026"]["projectCount"] >= 0
     assert 0 <= facts["investment_2026"]["executionPct"] <= 100
+    assert len(facts["investment_projects"]) == facts["investment_2026"]["projectCount"]
+    assert all(any(normalize(name) == normalize(PROVINCE) for name in item.get("provinces", [])) for item in facts["investment_projects"])
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Genera documentos base de planificación provincial.")
+    parser.add_argument("--province", help="Generar solamente la provincia indicada.")
+    args = parser.parse_args()
     TEMP.mkdir(parents=True, exist_ok=True)
     ensure_download(DASHBOARD_URL, DASHBOARD_PATH)
     ensure_download(DEMANDS_URL, DEMANDS_PATH)
+    ensure_download(INVESTMENT_URL, INVESTMENT_PATH)
     ensure_download(REFERENCE_URL, REFERENCE_PATH)
     dashboard = load_json(DASHBOARD_PATH)
+    investment_data = load_json(INVESTMENT_PATH)
     portal_data = load_json(PROJECT / "src" / "data" / "provinces.json")
     records = sorted(portal_data["provinces"], key=lambda item: int(PROVINCE_CODES[item["name"]]))
+    if args.province:
+        records = [record for record in records if normalize(record["name"]) == normalize(args.province)]
+        if not records:
+            raise ValueError(f"Provincia no encontrada: {args.province}")
     outputs = []
     for index, record in enumerate(records, 1):
         file_name = set_province_context(record)
-        print(f"[{index:02d}/32] {TERRITORIAL_CODE} · {PROVINCE}", flush=True)
-        facts = collect_facts(dashboard, portal_data)
+        print(f"[{index:02d}/{len(records):02d}] {TERRITORIAL_CODE} · {PROVINCE}", flush=True)
+        facts = collect_facts(dashboard, portal_data, investment_data)
         validate_facts(facts)
         plates = build_plates(facts)
         output = build_document(facts, plates)
@@ -1863,13 +2202,20 @@ def main():
                 "fileName": file_name,
                 "path": f"downloads/planes-provinciales/{file_name}",
                 "demands": len(facts["demands"]),
-                "pagesExpectedMinimum": 21 if len(facts["demands"]) <= 1 else 22,
+                "pagesExpectedMinimum": 24 if len(facts["demands"]) <= 1 else 25,
                 "size": output.stat().st_size,
             }
         )
-    manifest = {"generatedAt": "2026-08-02", "documents": outputs}
+    if args.province and MANIFEST_PATH.exists():
+        existing = load_json(MANIFEST_PATH)
+        by_key = {item["provinceKey"]: item for item in existing.get("documents", [])}
+        by_key.update({item["provinceKey"]: item for item in outputs})
+        manifest_documents = sorted(by_key.values(), key=lambda item: int(item["provinceCode"]))
+    else:
+        manifest_documents = outputs
+    manifest = {"generatedAt": "2026-08-02", "documents": manifest_documents}
     MANIFEST_PATH.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps({"outputs": len(outputs), "manifest": str(MANIFEST_PATH)}, ensure_ascii=False, indent=2))
+    print(json.dumps({"outputs": len(outputs), "manifestDocuments": len(manifest_documents), "manifest": str(MANIFEST_PATH)}, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":

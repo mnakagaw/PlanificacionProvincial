@@ -11,8 +11,8 @@
       "fileName": "10010000_Plan_Provincial_Distrito_Nacional_Documento_Base_2026.docx",
       "path": "downloads/planes-provinciales/10010000_Plan_Provincial_Distrito_Nacional_Documento_Base_2026.docx",
       "demands": 1,
-      "pagesExpectedMinimum": 21,
-      "size": 1116667
+      "pagesExpectedMinimum": 24,
+      "size": 1147905
     },
     {
       "provinceKey": "azua",
@@ -24,8 +24,8 @@
       "fileName": "07020000_Plan_Provincial_Azua_Documento_Base_2026.docx",
       "path": "downloads/planes-provinciales/07020000_Plan_Provincial_Azua_Documento_Base_2026.docx",
       "demands": 14,
-      "pagesExpectedMinimum": 22,
-      "size": 1137567
+      "pagesExpectedMinimum": 25,
+      "size": 1159873
     },
     {
       "provinceKey": "baoruco",
@@ -37,8 +37,8 @@
       "fileName": "06030000_Plan_Provincial_Baoruco_Documento_Base_2026.docx",
       "path": "downloads/planes-provinciales/06030000_Plan_Provincial_Baoruco_Documento_Base_2026.docx",
       "demands": 16,
-      "pagesExpectedMinimum": 22,
-      "size": 1131596
+      "pagesExpectedMinimum": 25,
+      "size": 1149571
     },
     {
       "provinceKey": "barahona",
@@ -50,8 +50,8 @@
       "fileName": "06040000_Plan_Provincial_Barahona_Documento_Base_2026.docx",
       "path": "downloads/planes-provinciales/06040000_Plan_Provincial_Barahona_Documento_Base_2026.docx",
       "demands": 12,
-      "pagesExpectedMinimum": 22,
-      "size": 1135538
+      "pagesExpectedMinimum": 25,
+      "size": 1151079
     },
     {
       "provinceKey": "dajabon",
@@ -63,8 +63,8 @@
       "fileName": "04050000_Plan_Provincial_Dajabon_Documento_Base_2026.docx",
       "path": "downloads/planes-provinciales/04050000_Plan_Provincial_Dajabon_Documento_Base_2026.docx",
       "demands": 15,
-      "pagesExpectedMinimum": 22,
-      "size": 1135723
+      "pagesExpectedMinimum": 25,
+      "size": 1152995
     },
     {
       "provinceKey": "duarte",
@@ -76,8 +76,8 @@
       "fileName": "03060000_Plan_Provincial_Duarte_Documento_Base_2026.docx",
       "path": "downloads/planes-provinciales/03060000_Plan_Provincial_Duarte_Documento_Base_2026.docx",
       "demands": 19,
-      "pagesExpectedMinimum": 22,
-      "size": 1141568
+      "pagesExpectedMinimum": 25,
+      "size": 1167725
     },
     {
       "provinceKey": "eliaspina",
@@ -89,8 +89,8 @@
       "fileName": "07070000_Plan_Provincial_Elias_Pina_Documento_Base_2026.docx",
       "path": "downloads/planes-provinciales/07070000_Plan_Provincial_Elias_Pina_Documento_Base_2026.docx",
       "demands": 18,
-      "pagesExpectedMinimum": 22,
-      "size": 1129548
+      "pagesExpectedMinimum": 25,
+      "size": 1148577
     },
     {
       "provinceKey": "elseibo",
@@ -102,8 +102,8 @@
       "fileName": "08080000_Plan_Provincial_El_Seibo_Documento_Base_2026.docx",
       "path": "downloads/planes-provinciales/08080000_Plan_Provincial_El_Seibo_Documento_Base_2026.docx",
       "demands": 15,
-      "pagesExpectedMinimum": 22,
-      "size": 1112488
+      "pagesExpectedMinimum": 25,
+      "size": 1130962
     },
     {
       "provinceKey": "espaillat",
@@ -115,8 +115,8 @@
       "fileName": "01090000_Plan_Provincial_Espaillat_Documento_Base_2026.docx",
       "path": "downloads/planes-provinciales/01090000_Plan_Provincial_Espaillat_Documento_Base_2026.docx",
       "demands": 10,
-      "pagesExpectedMinimum": 22,
-      "size": 1141531
+      "pagesExpectedMinimum": 25,
+      "size": 1161782
     },
     {
       "provinceKey": "independencia",
@@ -128,8 +128,8 @@
       "fileName": "06100000_Plan_Provincial_Independencia_Documento_Base_2026.docx",
       "path": "downloads/planes-provinciales/06100000_Plan_Provincial_Independencia_Documento_Base_2026.docx",
       "demands": 16,
-      "pagesExpectedMinimum": 22,
-      "size": 1136405
+      "pagesExpectedMinimum": 25,
+      "size": 1160435
     },
     {
       "provinceKey": "laaltagracia",
@@ -141,8 +141,8 @@
       "fileName": "08110000_Plan_Provincial_La_Altagracia_Documento_Base_2026.docx",
       "path": "downloads/planes-provinciales/08110000_Plan_Provincial_La_Altagracia_Documento_Base_2026.docx",
       "demands": 16,
-      "pagesExpectedMinimum": 22,
-      "size": 1127617
+      "pagesExpectedMinimum": 25,
+      "size": 1149875
     },
     {
       "provinceKey": "laromana",
@@ -154,8 +154,8 @@
       "fileName": "08120000_Plan_Provincial_La_Romana_Documento_Base_2026.docx",
       "path": "downloads/planes-provinciales/08120000_Plan_Provincial_La_Romana_Documento_Base_2026.docx",
       "demands": 12,
-      "pagesExpectedMinimum": 22,
-      "size": 1130091
+      "pagesExpectedMinimum": 25,
+      "size": 1144275
     },
     {
       "provinceKey": "lavega",
@@ -167,8 +167,8 @@
       "fileName": "02130000_Plan_Provincial_La_Vega_Documento_Base_2026.docx",
       "path": "downloads/planes-provinciales/02130000_Plan_Provincial_La_Vega_Documento_Base_2026.docx",
       "demands": 24,
-      "pagesExpectedMinimum": 22,
-      "size": 1142080
+      "pagesExpectedMinimum": 25,
+      "size": 1168169
     },
     {
       "provinceKey": "mariatrinidadsanchez",
@@ -180,8 +180,8 @@
       "fileName": "03140000_Plan_Provincial_Maria_Trinidad_Sanchez_Documento_Base_2026.docx",
       "path": "downloads/planes-provinciales/03140000_Plan_Provincial_Maria_Trinidad_Sanchez_Documento_Base_2026.docx",
       "demands": 10,
-      "pagesExpectedMinimum": 22,
-      "size": 1146450
+      "pagesExpectedMinimum": 25,
+      "size": 1164980
     },
     {
       "provinceKey": "montecristi",
@@ -193,8 +193,8 @@
       "fileName": "04150000_Plan_Provincial_Monte_Cristi_Documento_Base_2026.docx",
       "path": "downloads/planes-provinciales/04150000_Plan_Provincial_Monte_Cristi_Documento_Base_2026.docx",
       "demands": 14,
-      "pagesExpectedMinimum": 22,
-      "size": 1143955
+      "pagesExpectedMinimum": 25,
+      "size": 1167005
     },
     {
       "provinceKey": "pedernales",
@@ -206,8 +206,8 @@
       "fileName": "06160000_Plan_Provincial_Pedernales_Documento_Base_2026.docx",
       "path": "downloads/planes-provinciales/06160000_Plan_Provincial_Pedernales_Documento_Base_2026.docx",
       "demands": 22,
-      "pagesExpectedMinimum": 22,
-      "size": 1113158
+      "pagesExpectedMinimum": 25,
+      "size": 1131059
     },
     {
       "provinceKey": "peravia",
@@ -219,8 +219,8 @@
       "fileName": "05170000_Plan_Provincial_Peravia_Documento_Base_2026.docx",
       "path": "downloads/planes-provinciales/05170000_Plan_Provincial_Peravia_Documento_Base_2026.docx",
       "demands": 12,
-      "pagesExpectedMinimum": 22,
-      "size": 1124530
+      "pagesExpectedMinimum": 25,
+      "size": 1144329
     },
     {
       "provinceKey": "puertoplata",
@@ -232,8 +232,8 @@
       "fileName": "01180000_Plan_Provincial_Puerto_Plata_Documento_Base_2026.docx",
       "path": "downloads/planes-provinciales/01180000_Plan_Provincial_Puerto_Plata_Documento_Base_2026.docx",
       "demands": 25,
-      "pagesExpectedMinimum": 22,
-      "size": 1143385
+      "pagesExpectedMinimum": 25,
+      "size": 1169653
     },
     {
       "provinceKey": "hermanasmirabal",
@@ -245,8 +245,8 @@
       "fileName": "03190000_Plan_Provincial_Hermanas_Mirabal_Documento_Base_2026.docx",
       "path": "downloads/planes-provinciales/03190000_Plan_Provincial_Hermanas_Mirabal_Documento_Base_2026.docx",
       "demands": 9,
-      "pagesExpectedMinimum": 22,
-      "size": 1131278
+      "pagesExpectedMinimum": 25,
+      "size": 1148811
     },
     {
       "provinceKey": "samana",
@@ -258,8 +258,8 @@
       "fileName": "03200000_Plan_Provincial_Samana_Documento_Base_2026.docx",
       "path": "downloads/planes-provinciales/03200000_Plan_Provincial_Samana_Documento_Base_2026.docx",
       "demands": 15,
-      "pagesExpectedMinimum": 22,
-      "size": 1126101
+      "pagesExpectedMinimum": 25,
+      "size": 1142471
     },
     {
       "provinceKey": "sancristobal",
@@ -271,8 +271,8 @@
       "fileName": "05210000_Plan_Provincial_San_Cristobal_Documento_Base_2026.docx",
       "path": "downloads/planes-provinciales/05210000_Plan_Provincial_San_Cristobal_Documento_Base_2026.docx",
       "demands": 18,
-      "pagesExpectedMinimum": 22,
-      "size": 1148903
+      "pagesExpectedMinimum": 25,
+      "size": 1175261
     },
     {
       "provinceKey": "sanjuan",
@@ -284,8 +284,8 @@
       "fileName": "07220000_Plan_Provincial_San_Juan_Documento_Base_2026.docx",
       "path": "downloads/planes-provinciales/07220000_Plan_Provincial_San_Juan_Documento_Base_2026.docx",
       "demands": 23,
-      "pagesExpectedMinimum": 22,
-      "size": 1139012
+      "pagesExpectedMinimum": 25,
+      "size": 1159528
     },
     {
       "provinceKey": "sanpedrodemacoris",
@@ -297,8 +297,8 @@
       "fileName": "09230000_Plan_Provincial_San_Pedro_de_Macoris_Documento_Base_2026.docx",
       "path": "downloads/planes-provinciales/09230000_Plan_Provincial_San_Pedro_de_Macoris_Documento_Base_2026.docx",
       "demands": 21,
-      "pagesExpectedMinimum": 22,
-      "size": 1155644
+      "pagesExpectedMinimum": 25,
+      "size": 1179441
     },
     {
       "provinceKey": "sanchezramirez",
@@ -310,8 +310,8 @@
       "fileName": "02240000_Plan_Provincial_Sanchez_Ramirez_Documento_Base_2026.docx",
       "path": "downloads/planes-provinciales/02240000_Plan_Provincial_Sanchez_Ramirez_Documento_Base_2026.docx",
       "demands": 10,
-      "pagesExpectedMinimum": 22,
-      "size": 1139358
+      "pagesExpectedMinimum": 25,
+      "size": 1156610
     },
     {
       "provinceKey": "santiago",
@@ -323,8 +323,8 @@
       "fileName": "01250000_Plan_Provincial_Santiago_Documento_Base_2026.docx",
       "path": "downloads/planes-provinciales/01250000_Plan_Provincial_Santiago_Documento_Base_2026.docx",
       "demands": 21,
-      "pagesExpectedMinimum": 22,
-      "size": 1145946
+      "pagesExpectedMinimum": 25,
+      "size": 1181422
     },
     {
       "provinceKey": "santiagorodriguez",
@@ -336,8 +336,8 @@
       "fileName": "04260000_Plan_Provincial_Santiago_Rodriguez_Documento_Base_2026.docx",
       "path": "downloads/planes-provinciales/04260000_Plan_Provincial_Santiago_Rodriguez_Documento_Base_2026.docx",
       "demands": 13,
-      "pagesExpectedMinimum": 22,
-      "size": 1143305
+      "pagesExpectedMinimum": 25,
+      "size": 1159605
     },
     {
       "provinceKey": "valverde",
@@ -349,8 +349,8 @@
       "fileName": "04270000_Plan_Provincial_Valverde_Documento_Base_2026.docx",
       "path": "downloads/planes-provinciales/04270000_Plan_Provincial_Valverde_Documento_Base_2026.docx",
       "demands": 21,
-      "pagesExpectedMinimum": 22,
-      "size": 1132721
+      "pagesExpectedMinimum": 25,
+      "size": 1151126
     },
     {
       "provinceKey": "monsenornouel",
@@ -362,8 +362,8 @@
       "fileName": "02280000_Plan_Provincial_Monsenor_Nouel_Documento_Base_2026.docx",
       "path": "downloads/planes-provinciales/02280000_Plan_Provincial_Monsenor_Nouel_Documento_Base_2026.docx",
       "demands": 37,
-      "pagesExpectedMinimum": 22,
-      "size": 1137447
+      "pagesExpectedMinimum": 25,
+      "size": 1156728
     },
     {
       "provinceKey": "monteplata",
@@ -375,8 +375,8 @@
       "fileName": "09290000_Plan_Provincial_Monte_Plata_Documento_Base_2026.docx",
       "path": "downloads/planes-provinciales/09290000_Plan_Provincial_Monte_Plata_Documento_Base_2026.docx",
       "demands": 17,
-      "pagesExpectedMinimum": 22,
-      "size": 1140088
+      "pagesExpectedMinimum": 25,
+      "size": 1167141
     },
     {
       "provinceKey": "hatomayor",
@@ -388,8 +388,8 @@
       "fileName": "09300000_Plan_Provincial_Hato_Mayor_Documento_Base_2026.docx",
       "path": "downloads/planes-provinciales/09300000_Plan_Provincial_Hato_Mayor_Documento_Base_2026.docx",
       "demands": 18,
-      "pagesExpectedMinimum": 22,
-      "size": 1129743
+      "pagesExpectedMinimum": 25,
+      "size": 1147499
     },
     {
       "provinceKey": "sanjosedeocoa",
@@ -401,8 +401,8 @@
       "fileName": "05310000_Plan_Provincial_San_Jose_de_Ocoa_Documento_Base_2026.docx",
       "path": "downloads/planes-provinciales/05310000_Plan_Provincial_San_Jose_de_Ocoa_Documento_Base_2026.docx",
       "demands": 9,
-      "pagesExpectedMinimum": 22,
-      "size": 1138945
+      "pagesExpectedMinimum": 25,
+      "size": 1152854
     },
     {
       "provinceKey": "santodomingo",
@@ -414,8 +414,8 @@
       "fileName": "10320000_Plan_Provincial_Santo_Domingo_Documento_Base_2026.docx",
       "path": "downloads/planes-provinciales/10320000_Plan_Provincial_Santo_Domingo_Documento_Base_2026.docx",
       "demands": 0,
-      "pagesExpectedMinimum": 21,
-      "size": 1149774
+      "pagesExpectedMinimum": 24,
+      "size": 1204001
     }
   ]
 }
