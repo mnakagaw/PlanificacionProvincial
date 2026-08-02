@@ -16,8 +16,10 @@
 
 ## Content policy for the provincial version
 
+- Territorial filename code: `03140000` = planning region `03` + province `14` + provincial aggregate `0000`.
 - Working title: `Documento base para la formulación del Plan Estratégico de Desarrollo Territorial de la Provincia María Trinidad Sánchez`.
 - Short title: `Plan Provincial de Desarrollo — documento base`.
+- Describe the preparation stage positively and sparingly with `Documento base` or `Borrador técnico`; avoid repeated warnings such as `NO APROBADO` or prose centered on lack of approval.
 - Legal basis: Ley núm. 498-06 and Decreto núm. 493-07 only in the specific legal section requested for this adaptation.
 - Prefill factual diagnostic, public-investment, and consolidated-demand data with source and year.
 - Do not invent a vision, strategic objectives, results, actions, projects, indicators, targets, budgets, responsible institutions, financing, schedule, approval date, or validity period.
@@ -39,4 +41,3 @@
 - Inversión Pública Territorial 2026 aggregate used by the provincial portal.
 - Demandas Provinciales workbook `demandas_consolidadas_003.xlsx` for the ten MTS records.
 - Ley núm. 498-06 and Decreto núm. 493-07 for the legal and institutional section.
-

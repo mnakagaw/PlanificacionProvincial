@@ -32,7 +32,7 @@ OUTPUT = (
     / "public"
     / "downloads"
     / "planes-provinciales"
-    / "14000000_Plan_Provincial_Maria_Trinidad_Sanchez_Documento_Base_2026.docx"
+    / "03140000_Plan_Provincial_Maria_Trinidad_Sanchez_Documento_Base_2026.docx"
 )
 
 DASHBOARD_URL = "https://prodecare.net/DDPT/Dashboard-Territorial/data/territorial-dashboard.json"
@@ -1025,7 +1025,7 @@ def configure_header_footer(doc):
     right = table.cell(0, 1).paragraphs[0]
     right.alignment = WD_ALIGN_PARAGRAPH.RIGHT
     right.paragraph_format.space_after = Pt(0)
-    run = right.add_run("María Trinidad Sánchez · 14")
+    run = right.add_run("María Trinidad Sánchez · 03140000")
     set_run_font(run, size=7.5, color="65777E")
     footer = section.footer
     clear_container(footer)
@@ -1133,18 +1133,18 @@ def build_document(facts, plate_paths):
     p.paragraph_format.space_after = Pt(26)
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    r = p.add_run("DOCUMENTO DE TRABAJO · NO APROBADO")
-    set_run_font(r, size=13, color="D66A1D", bold=True)
+    r = p.add_run("BORRADOR TÉCNICO PARA REVISIÓN DEL CDP")
+    set_run_font(r, size=13, color="B57A16", bold=True)
     p.paragraph_format.space_after = Pt(6)
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    r = p.add_run("Horizonte, visión, objetivos y plan de acción: por acordar por el CDP")
+    r = p.add_run("Diagnóstico, orientaciones de análisis y espacios para la formulación participativa")
     set_run_font(r, size=10, color="65777E")
     for _ in range(5):
         doc.add_paragraph()
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    r = p.add_run("Código provincial 14 · Base estadística 2022–2026")
+    r = p.add_run("Código territorial 03140000 · Base estadística 2022–2026")
     set_run_font(r, size=9, color="65777E")
     page_break(doc)
 
@@ -1198,7 +1198,11 @@ def build_document(facts, plate_paths):
         doc,
         "Es una base técnica de trabajo para que el CDP formule el Plan Estratégico de Desarrollo Territorial correspondiente al nivel provincial. Ordena evidencia, plantea preguntas de validación y ofrece formatos para registrar acuerdos futuros.",
     )
-    add_note_box(doc, "No es un plan aprobado", "El documento no define por sí mismo vigencia, jerarquía de prioridades, compromisos presupuestarios ni autorización de proyectos.")
+    add_note_box(
+        doc,
+        "Alcance del documento base",
+        "Organiza evidencia y formatos para que el CDP formule y concerte la vigencia, las prioridades, los compromisos presupuestarios y la cartera de proyectos.",
+    )
     page_break(doc)
 
     doc.add_heading("1.3 Identidad y perfil territorial", level=2)

@@ -73,8 +73,8 @@ const decimalFormatter = new Intl.NumberFormat("es-DO", {
 
 const MTS_BASE_DOCUMENT = {
   provinceKey: "mariatrinidadsanchez",
-  fileName: "14000000_Plan_Provincial_Maria_Trinidad_Sanchez_Documento_Base_2026.docx",
-  path: "downloads/planes-provinciales/14000000_Plan_Provincial_Maria_Trinidad_Sanchez_Documento_Base_2026.docx",
+  fileName: "03140000_Plan_Provincial_Maria_Trinidad_Sanchez_Documento_Base_2026.docx",
+  path: "downloads/planes-provinciales/03140000_Plan_Provincial_Maria_Trinidad_Sanchez_Documento_Base_2026.docx",
 };
 
 function normalize(value) {
@@ -444,8 +444,8 @@ export function App() {
                   <span aria-hidden="true">PP</span>
                   <div>
                     <small>PLAN PROVINCIAL</small>
-                    <strong>{selected.plan.status}</strong>
-                    <p>{hasBaseDocument ? "Documento base disponible para la formulación del CDP; no constituye un plan aprobado." : "No se ha identificado un plan provincial publicado."}</p>
+                    <strong>{hasBaseDocument ? "Documento base" : selected.plan.status}</strong>
+                    <p>{hasBaseDocument ? "Disponible como insumo para la formulación del CDP." : "No se ha identificado un plan provincial publicado."}</p>
                   </div>
                 </div>
 
