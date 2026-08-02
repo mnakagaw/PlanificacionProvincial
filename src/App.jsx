@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import provinceData from "./data/provinces.json";
+import provincialDocumentData from "./data/provincial-documents.json";
 
 const { meta, provinces } = provinceData;
+const provincialDocuments = new Map(
+  provincialDocumentData.documents.map((document) => [document.provinceKey, document]),
+);
 
 const REGION_ORDER = [
   "Cibao Noroeste",
@@ -70,12 +74,6 @@ const compactFormatter = new Intl.NumberFormat("es-DO", {
 const decimalFormatter = new Intl.NumberFormat("es-DO", {
   maximumFractionDigits: 1,
 });
-
-const MTS_BASE_DOCUMENT = {
-  provinceKey: "mariatrinidadsanchez",
-  fileName: "03140000_Plan_Provincial_Maria_Trinidad_Sanchez_Documento_Base_2026.docx",
-  path: "downloads/planes-provinciales/03140000_Plan_Provincial_Maria_Trinidad_Sanchez_Documento_Base_2026.docx",
-};
 
 function normalize(value) {
   return String(value || "")
@@ -251,8 +249,9 @@ export function App() {
   const investmentUrl = selected
     ? `${meta.sources.investment.replace("data/mapa_inversion.json", "")}?source=mapa&province=${encodeURIComponent(selected.name)}`
     : "https://prodecare.net/DDPT/InversionPublicaTerritorial/";
-  const hasBaseDocument = selected?.key === MTS_BASE_DOCUMENT.provinceKey;
-  const baseDocumentUrl = `${import.meta.env.BASE_URL}${MTS_BASE_DOCUMENT.path}`;
+  const baseDocument = selected ? provincialDocuments.get(selected.key) : null;
+  const hasBaseDocument = Boolean(baseDocument);
+  const baseDocumentUrl = baseDocument ? `${import.meta.env.BASE_URL}${baseDocument.path}` : null;
 
   return (
     <main className="portal">
@@ -486,9 +485,9 @@ export function App() {
                     <SourceLink
                       href={baseDocumentUrl}
                       label="Descargar documento base del Plan Provincial (Word)"
-                      meta="MTS · Diagnóstico, inversión y demandas preelaborados"
+                      meta={`${selected.name} · Diagnóstico, inversión y demandas preelaborados`}
                       primary
-                      downloadName={MTS_BASE_DOCUMENT.fileName}
+                      downloadName={baseDocument.fileName}
                     />
                   )}
                   <SourceLink href="https://prodecare.net/DDPT/Dashboard-Territorial/" label="Abrir diagnóstico territorial" meta="Población, servicios y contexto" />

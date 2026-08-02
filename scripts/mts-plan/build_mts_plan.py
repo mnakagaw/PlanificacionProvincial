@@ -5,7 +5,6 @@ import math
 import os
 import re
 import shutil
-import textwrap
 import unicodedata
 import urllib.request
 from collections import Counter
@@ -26,14 +25,9 @@ PROJECT = Path(__file__).resolve().parents[2]
 WORKSPACE = PROJECT.parent
 SOURCE_DATA = WORKSPACE / "reference-dashboard-municipal" / "src" / "data"
 TEMP = Path(os.environ.get("TEMP", str(PROJECT / ".tmp"))) / "PlanProvincialMTS-20260801"
-CHARTS = TEMP / "charts"
-OUTPUT = (
-    PROJECT
-    / "public"
-    / "downloads"
-    / "planes-provinciales"
-    / "03140000_Plan_Provincial_Maria_Trinidad_Sanchez_Documento_Base_2026.docx"
-)
+CHARTS = TEMP / "charts" / "mariatrinidadsanchez"
+OUTPUT_DIR = PROJECT / "public" / "downloads" / "planes-provinciales"
+MANIFEST_PATH = PROJECT / "src" / "data" / "provincial-documents.json"
 
 DASHBOARD_URL = "https://prodecare.net/DDPT/Dashboard-Territorial/data/territorial-dashboard.json"
 DEMANDS_URL = "https://prodecare.net/DDPT/DemandasProvinciales/data/demandas_consolidadas_003.xlsx"
@@ -46,6 +40,58 @@ REFERENCE_PATH = TEMP / "03140002_PMD_cabrera_Borrador_Tecnico_2025-2028.docx"
 PROVINCE = "María Trinidad Sánchez"
 PROVINCE_KEY = "mariatrinidadsanchez"
 REGION = "Cibao Nordeste"
+REGION_CODE = "03"
+PROVINCE_CODE = "14"
+TERRITORIAL_CODE = "03140000"
+OUTPUT = OUTPUT_DIR / "03140000_Plan_Provincial_Maria_Trinidad_Sanchez_Documento_Base_2026.docx"
+
+REGION_CODES = {
+    "Cibao Norte": "01",
+    "Cibao Sur": "02",
+    "Cibao Nordeste": "03",
+    "Cibao Noroeste": "04",
+    "Valdesia": "05",
+    "Enriquillo": "06",
+    "El Valle": "07",
+    "Yuma": "08",
+    "Higuamo": "09",
+    "Ozama": "10",
+}
+
+PROVINCE_CODES = {
+    "Distrito Nacional": "01",
+    "Azua": "02",
+    "Baoruco": "03",
+    "Barahona": "04",
+    "Dajabón": "05",
+    "Duarte": "06",
+    "Elías Piña": "07",
+    "El Seibo": "08",
+    "Espaillat": "09",
+    "Independencia": "10",
+    "La Altagracia": "11",
+    "La Romana": "12",
+    "La Vega": "13",
+    "María Trinidad Sánchez": "14",
+    "Monte Cristi": "15",
+    "Pedernales": "16",
+    "Peravia": "17",
+    "Puerto Plata": "18",
+    "Hermanas Mirabal": "19",
+    "Samaná": "20",
+    "San Cristóbal": "21",
+    "San Juan": "22",
+    "San Pedro de Macorís": "23",
+    "Sánchez Ramírez": "24",
+    "Santiago": "25",
+    "Santiago Rodríguez": "26",
+    "Valverde": "27",
+    "Monseñor Nouel": "28",
+    "Monte Plata": "29",
+    "Hato Mayor": "30",
+    "San José de Ocoa": "31",
+    "Santo Domingo": "32",
+}
 
 COLORS = {
     "ink": "#203740",
@@ -90,7 +136,47 @@ def normalize(value) -> str:
     return re.sub(r"[^a-z0-9]", "", text.lower())
 
 
-def find_record(path: Path, province: str = PROVINCE):
+def ascii_slug(value: str) -> str:
+    text = unicodedata.normalize("NFD", value)
+    text = "".join(ch for ch in text if unicodedata.category(ch) != "Mn")
+    return re.sub(r"[^A-Za-z0-9]+", "_", text).strip("_")
+
+
+def join_spanish(values) -> str:
+    values = [str(value) for value in values if str(value).strip()]
+    if not values:
+        return "Sin registros"
+    if len(values) == 1:
+        return values[0]
+    if len(values) == 2:
+        return " y ".join(values)
+    return ", ".join(values[:-1]) + " y " + values[-1]
+
+
+def format_rd_billions(value: float) -> str:
+    return f"RD${value / 1e9:.2f} mil millones"
+
+
+def demand_phrase(count: int) -> str:
+    return "1 demanda" if count == 1 else f"{count} demandas"
+
+
+def set_province_context(record):
+    global PROVINCE, PROVINCE_KEY, REGION, REGION_CODE, PROVINCE_CODE, TERRITORIAL_CODE, CHARTS, OUTPUT
+    PROVINCE = record["name"]
+    PROVINCE_KEY = record["key"]
+    REGION = record["region"]
+    REGION_CODE = REGION_CODES[REGION]
+    PROVINCE_CODE = PROVINCE_CODES[PROVINCE]
+    TERRITORIAL_CODE = f"{REGION_CODE}{PROVINCE_CODE}0000"
+    CHARTS = TEMP / "charts" / PROVINCE_KEY
+    file_name = f"{TERRITORIAL_CODE}_Plan_Provincial_{ascii_slug(PROVINCE)}_Documento_Base_2026.docx"
+    OUTPUT = OUTPUT_DIR / file_name
+    return file_name
+
+
+def find_record(path: Path, province: str | None = None):
+    province = province or PROVINCE
     data = load_json(path)
     found = []
 
@@ -141,6 +227,7 @@ def parse_demands(path: Path):
                 "year": get(values, ["año"]),
             }
         )
+    workbook.close()
     return rows
 
 
@@ -360,7 +447,8 @@ def donut(draw, box, labels, values, colors, center_value="", center_label=""):
         draw.text((x2 - 10, yy), f"{value / total * 100:.1f}%", font=font(15, True), fill=rgb(COLORS["ink"]), anchor="ra")
 
 
-def draw_geo_map(draw, box, geojson, highlight_key=PROVINCE_KEY):
+def draw_geo_map(draw, box, geojson, highlight_key=None):
+    highlight_key = highlight_key or PROVINCE_KEY
     x1, y1, x2, y2 = box
     features = geojson.get("features", [])
     all_points = []
@@ -412,6 +500,7 @@ def build_plates(facts):
     province = facts["province"]
     metrics = province["metrics"]
     municipalities = sorted(facts["municipalities"], key=lambda item: item["population"], reverse=True)
+    chart_municipalities = municipalities[:4]
     municipal_condition = facts["municipal_condition"]
     urban = facts["urban_rural"]
     households = facts["households"]
@@ -431,24 +520,25 @@ def build_plates(facts):
     plate_header(draw, "Diagnóstico provincial · Territorio y población", PROVINCE, "Censo 2022")
     cards = [(70 + i * 300, 145, 350 + i * 300, 270) for i in range(4)]
     metric_card(draw, cards[0], "Población", f"{province['population']:,}", COLORS["blue"], "habitantes")
-    metric_card(draw, cards[1], "Municipios", str(province["municipalityCount"]), COLORS["green"], "Nagua, Cabrera, El Factor y Río San Juan")
+    metric_card(draw, cards[1], "Municipios", str(province["municipalityCount"]), COLORS["green"], "división administrativa")
     metric_card(draw, cards[2], "Zona urbana", f"{urban['urbana'] / urban['poblacion_total'] * 100:.1f}%", COLORS["purple"], f"{urban['urbana']:,} habitantes")
     metric_card(draw, cards[3], "Zona rural", f"{urban['rural'] / urban['poblacion_total'] * 100:.1f}%", COLORS["orange"], f"{urban['rural']:,} habitantes")
     section_card(draw, (70, 305, 650, 875), "Ubicación nacional")
     draw_geo_map(draw, (105, 385, 615, 790), geojson)
     draw_wrapped(draw, (105, 812), "La provincia se resalta únicamente como referencia cartográfica. La lectura intraprovincial requiere la localización posterior por municipio, distrito municipal y comunidad.", font(17), COLORS["muted"], 500, 5, 4)
-    section_card(draw, (680, 305, 1230, 875), "Población por municipio")
+    population_chart_title = "Población por municipio" if len(municipalities) <= 4 else "Municipios de mayor población"
+    section_card(draw, (680, 305, 1230, 875), population_chart_title)
     horizontal_bars(
         draw,
         (710, 385, 1195, 785),
-        [item["name"] for item in municipalities],
-        [item["population"] for item in municipalities],
+        [item["name"] for item in chart_municipalities],
+        [item["population"] for item in chart_municipalities],
         [COLORS["blue"], COLORS["green"], COLORS["teal"], COLORS["gold"]],
         value_format=lambda value: f"{value:,.0f}",
     )
     total = province["population"]
     y = 770
-    for item in municipalities:
+    for item in chart_municipalities:
         draw.text((720, y), item["name"], font=font(14), fill=rgb(COLORS["ink"]))
         draw.text((1185, y), f"{item['population'] / total * 100:.1f}% del total", font=font(14, True), fill=rgb(COLORS["muted"]), anchor="ra")
         y += 22
@@ -531,10 +621,10 @@ def build_plates(facts):
     section_card(draw, (70, 305, 1230, 930), "Cobertura declarada por municipio")
     names = []
     water_values, toilet_values, garbage_values = [], [], []
-    condition_by_name = {item["municipio"]: item for item in municipal_condition}
-    for item in municipalities:
+    condition_by_name = {normalize(item["municipio"]): item for item in municipal_condition}
+    for item in chart_municipalities:
         name = item["name"]
-        record = condition_by_name[name]["servicios"]
+        record = condition_by_name[normalize(name)]["servicios"]
         total_h = record["servicios_sanitarios"]["total"]
         names.append(name)
         water_values.append(record["agua_uso_domestico"]["categorias"]["del_acueducto_dentro_de_la_vivienda"] / total_h * 100)
@@ -642,7 +732,12 @@ def build_plates(facts):
     line_chart(draw, (105, 875, 1195, 1190), [item["year"] for item in traffic], [item["rate"] for item in traffic], COLORS["orange"])
     roads = metrics["roads"]["latest"]
     section_card(draw, (70, 1270, 1230, 1465), "Dato complementario y preguntas", COLORS["pale_blue"])
-    draw_wrapped(draw, (105, 1335), f"La fuente registra {roads['records']} intervenciones viales, {roads['lengthKm']:.1f} km y {roads['areaM2']:,.0f} m² en el período {roads['period']}. ¿Dónde se concentran los eventos? ¿Qué vías, horarios y grupos requieren verificación local? ¿Qué parte del problema corresponde a infraestructura, control, educación o atención de emergencias?", font(17), COLORS["ink"], 1085, 5, 5)
+    roads_note = (
+        f"La fuente registra {roads['records']} intervenciones viales, {roads['lengthKm']:.1f} km y {roads['areaM2']:,.0f} m² en el período {roads['period']}. ¿Dónde se concentran los eventos? ¿Qué vías, horarios y grupos requieren verificación local? ¿Qué parte del problema corresponde a infraestructura, control, educación o atención de emergencias?"
+        if roads
+        else "La fuente consultada no ofrece un registro vial reciente para la provincia. El CDP deberá solicitar el inventario de intervenciones, localizar los eventos y verificar qué parte de la situación corresponde a infraestructura, control, educación o atención de emergencias."
+    )
+    draw_wrapped(draw, (105, 1335), roads_note, font(17), COLORS["ink"], 1085, 5, 5)
     plate_footer(draw, "Fuente: Dashboard Territorial. Se excluye 2026 de las series comparativas por corresponder a un período parcial.")
     paths.append(save_plate(image, "lamina_05_seguridad.png"))
 
@@ -706,7 +801,7 @@ def build_plates(facts):
     metric_card(draw, (670, 145, 950, 270), "Por 10 mil hab.", f"{sports['per10k']:.1f}", COLORS["green"], "instalaciones deportivas")
     metric_card(draw, (970, 145, 1230, 270), "Propiedad municipal", f"{sports['owners'].get('El Ayuntamiento', 0)}", COLORS["blue"], "instalaciones")
     section_card(draw, (70, 305, 650, 1055), "Establecimientos de salud por tipo", COLORS["pale_gold"], COLORS["gold"])
-    health_sorted = health_counts.most_common()
+    health_sorted = health_counts.most_common(8)
     horizontal_bars(
         draw,
         (105, 390, 615, 990),
@@ -717,7 +812,7 @@ def build_plates(facts):
     )
     section_card(draw, (680, 305, 1230, 1055), "Instalaciones deportivas por propietario", COLORS["pale_green"], COLORS["green"])
     owner_counts = Counter(sports["owners"])
-    owners = owner_counts.most_common()
+    owners = owner_counts.most_common(8)
     owner_labels = [
         "Ayuntamientos" if label == "El Ayuntamiento" else "MIDEREC" if label == "MIDEREC" else label.replace("Entidad ", "")[:23]
         for label, _ in owners
@@ -743,7 +838,7 @@ def build_plates(facts):
     metric_card(draw, (70, 145, 350, 270), "Proyectos 2026", f"{investment_2026['projectCount']:,}", COLORS["blue"], "asociados a la provincia")
     metric_card(draw, (370, 145, 650, 270), "Presupuesto 2026", f"RD$ {investment_2026['budget']/1e9:.2f} mil M", COLORS["green"], "corte 31-07-2026")
     metric_card(draw, (670, 145, 950, 270), "Ejecutado 2026", f"RD$ {investment_2026['executed']/1e9:.2f} mil M", COLORS["green"], "corte 31-07-2026")
-    metric_card(draw, (970, 145, 1230, 270), "Ejecución 2026", f"{investment_2026['executionPct']:.1f}%", COLORS["orange"], "23 proyectos con ejecución")
+    metric_card(draw, (970, 145, 1230, 270), "Ejecución 2026", f"{investment_2026['executionPct']:.1f}%", COLORS["orange"], f"{investment_2026['projectsWithExecution']} proyectos con ejecución")
     section_card(draw, (70, 305, 1230, 1045), "Presupuesto y ejecución registrada · 2018–2025")
     grouped_bars(
         draw,
@@ -772,13 +867,15 @@ def build_plates(facts):
     permits = [item for item in metrics["permits"]["series"] if item["year"] <= 2025]
     latest_permit = metrics["permits"]["latest"]
     metric_card(draw, (70, 145, 350, 270), "Demandas CDP", f"{len(demands)}", COLORS["blue"], "consolidado 2026")
-    metric_card(draw, (370, 145, 650, 270), "Licencias 2026", f"{latest_permit['licenses']}", COLORS["purple"], "enero–junio")
-    metric_card(draw, (670, 145, 950, 270), "Área autorizada", f"{latest_permit['areaM2']:,.0f} m²", COLORS["purple"], "enero–junio 2026")
-    metric_card(draw, (970, 145, 1230, 270), "Inversión declarada", f"RD$ {latest_permit['investment']/1e6:.1f} M", COLORS["purple"], "enero–junio 2026")
+    metric_card(draw, (370, 145, 650, 270), "Licencias 2026", f"{latest_permit['licenses']}" if latest_permit else "Sin dato", COLORS["purple"], "enero–junio" if latest_permit else "verificación requerida")
+    metric_card(draw, (670, 145, 950, 270), "Área autorizada", f"{latest_permit['areaM2']:,.0f} m²" if latest_permit else "Sin dato", COLORS["purple"], "enero–junio 2026" if latest_permit else "verificación requerida")
+    metric_card(draw, (970, 145, 1230, 270), "Inversión declarada", f"RD$ {latest_permit['investment']/1e6:.1f} M" if latest_permit else "Sin dato", COLORS["purple"], "enero–junio 2026" if latest_permit else "verificación requerida")
     section_card(draw, (70, 305, 650, 880), "Licencias e inversión declarada", COLORS["white"])
     years = [item["year"] for item in permits]
     investment_values = [item["investment"] / 1e6 for item in permits]
     line_chart(draw, (105, 390, 615, 760), years, investment_values, COLORS["purple"], value_format=lambda value: f"{value:.0f}")
+    if not permits:
+        draw.text((360, 570), "Sin registros disponibles", font=font(20, True), fill=rgb(COLORS["muted"]), anchor="mm")
     draw.text((110, 770), "Inversión declarada · millones de RD$", font=font(14), fill=rgb(COLORS["muted"]))
     y = 800
     for item in permits:
@@ -787,37 +884,46 @@ def build_plates(facts):
         draw.text((600, y), f"{item['areaM2']:,.0f} m²", font=font(13, True), fill=rgb(COLORS["ink"]), anchor="ra")
         y += 24
     section_card(draw, (680, 305, 1230, 880), "Demandas por tema común", COLORS["pale_blue"])
-    theme_counts = Counter((item["theme"].split("-")[0] + "-" + item["theme"].split("-", 1)[1][:26]) if "-" in item["theme"] else item["theme"] for item in demands)
+    theme_counts = Counter((item["theme"].split("-")[0] + "-" + item["theme"].split("-", 1)[1][:26]) if "-" in item["theme"] else item["theme"] or "Sin clasificar" for item in demands)
+    theme_top = theme_counts.most_common(6)
     horizontal_bars(
         draw,
         (715, 390, 1195, 820),
-        [label for label, _ in theme_counts.most_common()],
-        [value for _, value in theme_counts.most_common()],
+        [label for label, _ in theme_top],
+        [value for _, value in theme_top],
         [COLORS["blue"], COLORS["green"], COLORS["orange"], COLORS["purple"], COLORS["gold"]],
         value_format=lambda value: f"{value:,.0f}",
     )
     section_card(draw, (70, 915, 650, 1260), "Localización declarada de las demandas", COLORS["pale_green"])
     municipality_counts = Counter(item["municipality"].title() if item["municipality"] else "Provincial / sin municipio" for item in demands)
+    municipality_top = municipality_counts.most_common(5)
     horizontal_bars(
         draw,
         (105, 1000, 615, 1205),
-        [label for label, _ in municipality_counts.most_common()],
-        [value for _, value in municipality_counts.most_common()],
+        [label for label, _ in municipality_top],
+        [value for _, value in municipality_top],
         [COLORS["green"], COLORS["blue"], COLORS["teal"], COLORS["gold"]],
         value_format=lambda value: f"{value:,.0f}",
     )
     section_card(draw, (680, 915, 1230, 1260), "Instituciones responsables registradas", COLORS["pale_gold"], COLORS["orange"])
     institution_counts = Counter(shorten_institution(item["institution"]) for item in demands)
+    institution_top = institution_counts.most_common(5)
     horizontal_bars(
         draw,
         (715, 1000, 1195, 1205),
-        [label for label, _ in institution_counts.most_common()],
-        [value for _, value in institution_counts.most_common()],
+        [label for label, _ in institution_top],
+        [value for _, value in institution_top],
         COLORS["orange"],
         value_format=lambda value: f"{value:,.0f}",
     )
     section_card(draw, (70, 1295, 1230, 1465), "Uso correcto en la formulación", COLORS["pale_blue"])
-    draw_wrapped(draw, (105, 1348), "Las diez demandas son insumos consolidados del CDP. Su inclusión no las convierte automáticamente en acciones del plan ni acredita factibilidad, presupuesto, madurez técnica o aprobación. El CDP debe revisar su vigencia, alcance territorial, relación con el diagnóstico y estado SNIP.", font(17), COLORS["ink"], 1080, 5, 5)
+    if len(demands) == 1:
+        demand_use_note = "La demanda es un insumo consolidado del CDP. Su inclusión no la convierte automáticamente en una acción del plan ni acredita factibilidad, presupuesto o madurez técnica. El CDP debe revisar su vigencia, alcance territorial, relación con el diagnóstico y estado SNIP."
+    elif demands:
+        demand_use_note = f"Las {len(demands)} demandas son insumos consolidados del CDP. Su inclusión no las convierte automáticamente en acciones del plan ni acredita factibilidad, presupuesto o madurez técnica. El CDP debe revisar su vigencia, alcance territorial, relación con el diagnóstico y estado SNIP."
+    else:
+        demand_use_note = "El consolidado consultado no registra demandas para esta provincia. El CDP debe verificar si existen actas, prioridades o registros posteriores e incorporarlos con su trazabilidad antes de formular acciones."
+    draw_wrapped(draw, (105, 1348), demand_use_note, font(17), COLORS["ink"], 1080, 5, 5)
     plate_footer(draw, "Fuente: permisos del Dashboard Territorial; Demandas Provinciales, libro consolidado 003, 2026.")
     paths.append(save_plate(image, "lamina_09_demandas.png"))
 
@@ -1025,14 +1131,14 @@ def configure_header_footer(doc):
     right = table.cell(0, 1).paragraphs[0]
     right.alignment = WD_ALIGN_PARAGRAPH.RIGHT
     right.paragraph_format.space_after = Pt(0)
-    run = right.add_run("María Trinidad Sánchez · 03140000")
+    run = right.add_run(f"{PROVINCE} · {TERRITORIAL_CODE}")
     set_run_font(run, size=7.5, color="65777E")
     footer = section.footer
     clear_container(footer)
     paragraph = footer.add_paragraph()
     paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
     paragraph.paragraph_format.space_after = Pt(0)
-    run = paragraph.add_run("María Trinidad Sánchez · Documento base para formulación · ")
+    run = paragraph.add_run(f"{PROVINCE} · Documento base para formulación · ")
     set_run_font(run, size=7.5, color="65777E")
     add_page_field(paragraph)
 
@@ -1098,10 +1204,10 @@ def build_document(facts, plate_paths):
     configure_styles(doc)
     configure_header_footer(doc)
     props = doc.core_properties
-    props.title = "Documento base para la formulación del Plan Provincial de María Trinidad Sánchez"
+    props.title = f"Documento base para la formulación del Plan Provincial de {PROVINCE}"
     props.subject = "Base técnica para deliberación del Consejo de Desarrollo Provincial"
     props.author = "DDPT · Documento base generado para revisión institucional"
-    props.keywords = "María Trinidad Sánchez; Plan Provincial; CDP; diagnóstico; inversión; demandas"
+    props.keywords = f"{PROVINCE}; Plan Provincial; CDP; diagnóstico; inversión; demandas"
 
     # Cover
     for _ in range(4):
@@ -1144,7 +1250,7 @@ def build_document(facts, plate_paths):
         doc.add_paragraph()
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    r = p.add_run("Código territorial 03140000 · Base estadística 2022–2026")
+    r = p.add_run(f"Código territorial {TERRITORIAL_CODE} · Base estadística 2022–2026")
     set_run_font(r, size=9, color="65777E")
     page_break(doc)
 
@@ -1162,7 +1268,7 @@ def build_document(facts, plate_paths):
     doc.add_heading("Síntesis ejecutiva", level=1)
     add_body_paragraph(
         doc,
-        "María Trinidad Sánchez registró 156,633 habitantes en el Censo 2022, distribuidos entre Nagua, Cabrera, El Factor y Río San Juan. Este documento organiza información factual sobre población, servicios, condiciones sociales, seguridad, educación, economía, salud, deporte, inversión pública, permisos y demandas provinciales.",
+        f"{PROVINCE} registró {facts['province']['population']:,} habitantes en el Censo 2022, distribuidos en {facts['province']['municipalityCount']} municipios: {join_spanish(item['name'] for item in facts['municipalities'])}. Este documento organiza información factual sobre población, servicios, condiciones sociales, seguridad, educación, economía, salud, deporte, inversión pública, permisos y demandas provinciales.",
     )
     add_body_paragraph(
         doc,
@@ -1171,7 +1277,7 @@ def build_document(facts, plate_paths):
     add_note_box(
         doc,
         "Regla de uso",
-        "Los datos y las diez demandas consolidadas están preelaborados como insumos. Ninguna visión, objetivo, acción, proyecto, meta, presupuesto, responsable o plazo ha sido decidido en este documento.",
+        f"Los datos y los registros de demandas ({len(facts['demands'])} en el consolidado consultado) están preelaborados como insumos. Ninguna visión, objetivo, acción, proyecto, meta, presupuesto, responsable o plazo ha sido decidido en este documento.",
         fill="FCF6E9",
         title_color="B57A16",
     )
@@ -1209,9 +1315,9 @@ def build_document(facts, plate_paths):
     general_rows = [
         ("Provincia", PROVINCE, "Clasificador geográfico"),
         ("Región de planificación", REGION, "Dashboard Territorial"),
-        ("Código provincial", "14", "Clasificador geográfico"),
+        ("Código provincial", PROVINCE_CODE, "Clasificador geográfico"),
         ("Población", f"{facts['province']['population']:,} habitantes", "X Censo 2022, ONE"),
-        ("Municipios", "Nagua, Cabrera, El Factor y Río San Juan", "División político-administrativa"),
+        ("Municipios", join_spanish(item["name"] for item in facts["municipalities"]), "División político-administrativa"),
         ("Hogares", f"{facts['households']['hogares_total']:,}", "X Censo 2022, ONE"),
         ("Población urbana / rural", f"{facts['urban_rural']['urbana']:,} / {facts['urban_rural']['rural']:,}", "X Censo 2022, ONE"),
     ]
@@ -1219,7 +1325,7 @@ def build_document(facts, plate_paths):
     doc.add_heading("1.4 Antecedentes y alcance", level=2)
     add_body_paragraph(
         doc,
-        "No se ha identificado un Plan Provincial publicado para María Trinidad Sánchez dentro del portal utilizado como línea base. La ausencia en el inventario no demuestra que no existan documentos, acuerdos o ejercicios anteriores; el CDP deberá completar esa verificación documental.",
+        f"No se ha identificado un Plan Provincial publicado para {PROVINCE} dentro del portal utilizado como línea base. La ausencia en el inventario no demuestra que no existan documentos, acuerdos o ejercicios anteriores; el CDP deberá completar esa verificación documental.",
     )
     add_body_paragraph(
         doc,
@@ -1334,42 +1440,75 @@ def build_document(facts, plate_paths):
 
     # Technical reading
     doc.add_heading("2.1 Lectura técnica y límites de la evidencia", level=1)
+    municipalities = sorted(facts["municipalities"], key=lambda item: item["population"], reverse=True)
+    top_municipality = municipalities[0]
+    top_municipality_pct = top_municipality["population"] / facts["province"]["population"] * 100
+    other_municipalities = len(municipalities) - 1
+    territory_observation = (
+        f"{top_municipality['name']} concentra {top_municipality_pct:.1f}% de la población provincial"
+        + (f"; los otros {other_municipalities} municipios reúnen el resto." if other_municipalities else ".")
+    )
+    services = facts["condition"]["servicios"]
+    household_total = services["servicios_sanitarios"]["total"]
+    water_pct = services["agua_uso_domestico"]["categorias"]["del_acueducto_dentro_de_la_vivienda"] / household_total * 100
+    toilet_pct = services["servicios_sanitarios"]["categorias"]["inodoro"] / household_total * 100
+    garbage_pct = services["eliminacion_basura"]["categorias"]["la_recoge_el_ayuntamiento"] / household_total * 100
+    burn_pct = services["eliminacion_basura"]["categorias"]["la_queman"] / household_total * 100
+    metrics = facts["province"]["metrics"]
+    overcrowding = metrics["overcrowding"]
+    disability = metrics["disability"]
+    inaipi = metrics["inaipi"]
+    traffic_latest = [item for item in metrics["traffic"]["series"] if item["year"] <= 2025][-1]
+    efficiency = facts["education"]["anuario"]["eficiencia"]["secundario"]
+    dee = facts["economy"]["dee_2024"]
+    investment_2026 = facts["investment_2026"]
+    inv_execution = [item["executionPct"] for item in metrics["investment"]["series"]]
+    sports = metrics["sports"]
     readings = [
         (
             "Territorio y población",
-            "Nagua concentra 52.0% de la población provincial; Cabrera, El Factor y Río San Juan reúnen el resto. El agregado no muestra por sí mismo tiempos de viaje, conectividad, dispersión rural, exposición a riesgos ni acceso real a servicios.",
+            territory_observation + " El agregado no muestra por sí mismo tiempos de viaje, conectividad, dispersión rural, exposición a riesgos ni acceso real a servicios.",
             "Localizar comunidades, corredores, cuencas y equipamientos compartidos; verificar cómo cambian las necesidades entre zonas urbanas y rurales.",
         ),
         (
             "Servicios básicos",
-            "El Censo registra 61.0% de hogares con agua del acueducto dentro de la vivienda, 78.7% con inodoro y 79.5% con recogida municipal de residuos. Las diferencias entre municipios son visibles.",
+            f"El Censo registra {water_pct:.1f}% de hogares con agua del acueducto dentro de la vivienda, {toilet_pct:.1f}% con inodoro y {garbage_pct:.1f}% con recogida municipal de residuos. La lámina permite contrastar los municipios de mayor población.",
             "Comprobar continuidad, presión, potabilidad, frecuencia, rutas, disposición final, costo y población no servida; distinguir competencias municipales y sectoriales.",
         ),
         (
             "Condiciones sociales",
-            "Los registros 2026 muestran 3.9% de hacinamiento extremo y 9.7% moderado; 13 centros INAIPI y 70.7% de asistencia registrada; 13,064 personas con discapacidad distribuidas por ICV.",
+            f"Los registros 2026 muestran {overcrowding['extremePct']:.1f}% de hacinamiento extremo y {overcrowding['moderatePct']:.1f}% moderado; {inaipi['centers']} centros INAIPI y {inaipi['attendancePct']:.1f}% de asistencia registrada; {disability['total']:,} personas con discapacidad distribuidas por ICV.",
             "Revisar definiciones, evitar tratar presencias como personas únicas y localizar barreras específicas antes de definir población objetivo.",
         ),
         (
             "Seguridad y movilidad",
-            "La tasa de homicidios fue 8.3 por 100 mil en 2024. La tasa de muertes de tránsito fue 32.6 por 100 mil en 2025, con variación anual considerable.",
+            f"La tasa de homicidios fue {metrics['homicide']['latest']['rate']:.1f} por 100 mil en 2024. La tasa de muertes de tránsito fue {traffic_latest['rate']:.1f} por 100 mil en 2025, dentro de una serie con variación anual.",
             "Desagregar eventos por lugar, vía, horario, sexo, edad y circunstancia; contrastar infraestructura, control, educación y respuesta de emergencia.",
         ),
         (
             "Educación y economía",
-            "El Anuario 2024 reporta 87.0% de promoción, 5.9% de abandono y 7.1% de reprobación en secundaria. El DEE registra 1,289 establecimientos y empleo estimado de 9,818 personas.",
+            f"El Anuario 2024 reporta {efficiency['promocion']:.1f}% de promoción, {efficiency['abandono']:.1f}% de abandono y {efficiency['reprobacion']:.1f}% de reprobación en secundaria. El DEE registra {dee['total_establishments']:,} establecimientos y empleo estimado de {dee['total_employees']:,.0f} personas.",
             "Validar distritos educativos y evitar representar el DEE como totalidad de la economía, pues no cubre adecuadamente informalidad, autoempleo ni producción agropecuaria familiar.",
         ),
         (
             "Inversión y demandas",
-            "El corte 2026 asocia 50 proyectos, RD$4.83 mil millones de presupuesto y 42.8% de ejecución registrada. El consolidado del CDP incluye diez demandas.",
+            f"El corte 2026 asocia {investment_2026['projectCount']} proyectos, {format_rd_billions(investment_2026['budget'])} de presupuesto y {investment_2026['executionPct']:.1f}% de ejecución registrada. El consolidado del CDP incluye {demand_phrase(len(facts['demands']))}.",
             "Revisar localización, estado, duplicidades, contratos, madurez técnica, código SNIP, financiamiento y relación con brechas; no equiparar demanda, proyecto aprobado e inversión ejecutada.",
         ),
     ]
-    for title, observation, verification in readings:
-        doc.add_heading(title, level=2)
-        add_body_paragraph(doc, "Dato observado. " + observation, bold_lead="Dato observado.")
-        add_body_paragraph(doc, "Verificación requerida. " + verification, bold_lead="Verificación requerida.")
+    add_body_paragraph(
+        doc,
+        "La comparación separa el dato disponible de la verificación que debe realizar la comisión técnica antes de que el CDP formule prioridades.",
+        small=True,
+    )
+    add_table(
+        doc,
+        ["Tema", "Dato observado", "Verificación requerida"],
+        readings,
+        [1.2, 2.75, 2.55],
+        font_size=7.4,
+        alternating=True,
+    )
     page_break(doc)
 
     # Strengths and weaknesses
@@ -1378,53 +1517,67 @@ def build_document(facts, plate_paths):
         doc,
         "La matriz convierte evidencia en preguntas de trabajo. Las categorías son provisionales: una cobertura alta puede ocultar problemas de calidad y una brecha estadística puede corresponder a distintas competencias o causas. El CDP debe confirmar, modificar o descartar cada fila.",
     )
+    if facts["demands"]:
+        demand_matrix = (
+            "Fortaleza potencial",
+            ("1 demanda priorizada y consolidada por el CDP en 2026." if len(facts["demands"]) == 1 else f"{len(facts['demands'])} demandas priorizadas y consolidadas por el CDP en 2026."),
+            "Hay un punto de partida participativo documentado, sin que ello pruebe factibilidad o vigencia.",
+            "¿Cuáles deben ratificarse, reformularse o agruparse y con qué criterio?",
+        )
+    else:
+        demand_matrix = (
+            "Aspecto institucional a completar",
+            "El consolidado consultado no registra demandas para la provincia.",
+            "La comisión técnica debe verificar actas, ejercicios posteriores y el estado de la consolidación.",
+            "¿Qué prioridades documentadas deben incorporarse y con qué trazabilidad?",
+        )
     matrix_rows = [
         (
             "Fortaleza potencial",
             "Red territorial de equipamientos",
-            "61 instalaciones deportivas; 39 de propiedad municipal; centros de salud presentes en los cuatro municipios.",
+            f"{sports['count']} instalaciones deportivas; {sports['owners'].get('El Ayuntamiento', 0)} de propiedad municipal; {len(facts['health']['centros'])} registros de centros de salud.",
             "Puede existir una base física para coordinación intermunicipal, si el estado y la capacidad son adecuados.",
             "¿Qué instalaciones están operativas, accesibles y sirven a más de un municipio?",
         ),
         (
             "Fortaleza potencial",
             "Capacidad de inversión observada",
-            "Ejecución registrada entre 86.4% y 98.8% en 2018–2025; 50 proyectos asociados en 2026.",
+            f"Ejecución registrada entre {min(inv_execution):.1f}% y {max(inv_execution):.1f}% en 2018–2025; {investment_2026['projectCount']} proyectos asociados en 2026.",
             "Existe flujo de inversión que podría articularse con acuerdos territoriales; las series requieren conciliación.",
             "¿Qué proyectos se alinean con brechas validadas y cuál es su estado real?",
         ),
         (
-            "Fortaleza potencial",
+            demand_matrix[0],
             "Base institucional de demanda",
-            "Diez demandas priorizadas y consolidadas por el CDP en 2026.",
-            "Hay un punto de partida participativo documentado, sin que ello pruebe factibilidad o vigencia.",
-            "¿Cuáles deben ratificarse, reformularse o agruparse y con qué criterio?",
+            demand_matrix[1],
+            demand_matrix[2],
+            demand_matrix[3],
         ),
         (
             "Debilidad / brecha potencial",
             "Agua y saneamiento",
-            "61.0% con acueducto dentro; 78.7% con inodoro; diferencias municipales marcadas.",
+            f"{water_pct:.1f}% con acueducto dentro; {toilet_pct:.1f}% con inodoro; contraste disponible entre municipios.",
             "El agregado sugiere brechas de acceso, pero no mide calidad, continuidad ni localización.",
             "¿Qué comunidades y sistemas explican la brecha y qué institución tiene competencia?",
         ),
         (
             "Debilidad / brecha potencial",
             "Residuos y drenaje",
-            "79.5% declara recogida municipal; 16.9% quema residuos; demandas incluyen drenaje y saneamiento.",
+            f"{garbage_pct:.1f}% declara recogida municipal y {burn_pct:.1f}% quema residuos; las demandas deben contrastarse con estas categorías censales.",
             "Pueden existir brechas de cobertura y gestión ambiental; demanda y dato censal deben contrastarse.",
             "¿Qué rutas, frecuencias, puntos de disposición y zonas inundables deben verificarse?",
         ),
         (
             "Debilidad / brecha potencial",
             "Seguridad vial",
-            "Tasa de muertes de tránsito de 32.6 por 100 mil en 2025.",
+            f"Tasa de muertes de tránsito de {traffic_latest['rate']:.1f} por 100 mil en 2025.",
             "La serie señala un asunto para investigación, no una causa ni una solución predeterminada.",
             "¿Dónde, cuándo y en qué condiciones ocurren los eventos?",
         ),
         (
             "Debilidad / brecha potencial",
             "Inclusión y vivienda",
-            "13.6% de hogares con hacinamiento extremo o moderado; 13,064 personas con discapacidad por ICV.",
+            f"{overcrowding['extremePct'] + overcrowding['moderatePct']:.1f}% de hogares con hacinamiento extremo o moderado; {disability['total']:,} personas con discapacidad por ICV.",
             "La combinación puede indicar vulnerabilidades diferenciadas que requieren localización y validación.",
             "¿Qué hogares, barreras y servicios concentran la situación?",
         ),
@@ -1480,13 +1633,14 @@ def build_document(facts, plate_paths):
         for cell in row.cells:
             set_cell_shading(cell, "F3F6F6")
     doc.add_heading("4.3 Criterios de priorización a acordar", level=2)
+    add_body_paragraph(doc, "El CDP completará la definición y el peso o regla de cada criterio durante la sesión de concertación.", small=True)
     criteria_rows = [
-        ("Urgencia y gravedad", "POR ACORDAR POR EL CDP", ""),
-        ("Equidad territorial y poblacional", "POR ACORDAR POR EL CDP", ""),
-        ("Escala o interdependencia provincial", "POR ACORDAR POR EL CDP", ""),
-        ("Competencia y coordinación institucional", "POR ACORDAR POR EL CDP", ""),
-        ("Madurez técnica y financiera", "POR ACORDAR POR EL CDP", ""),
-        ("Sostenibilidad, riesgos y mantenimiento", "POR ACORDAR POR EL CDP", ""),
+        ("Urgencia y gravedad", "", ""),
+        ("Equidad territorial y poblacional", "", ""),
+        ("Escala o interdependencia provincial", "", ""),
+        ("Competencia y coordinación institucional", "", ""),
+        ("Madurez técnica y financiera", "", ""),
+        ("Sostenibilidad, riesgos y mantenimiento", "", ""),
     ]
     add_table(doc, ["Criterio", "Definición acordada", "Peso / regla"], criteria_rows, [2.25, 3.25, 1.0], font_size=8)
     page_break(doc)
@@ -1502,10 +1656,10 @@ def build_document(facts, plate_paths):
     )
     doc.add_heading("5.1 Visión provincial", level=2)
     vision_rows = [
-        ("Horizonte temporal", "POR ACORDAR POR EL CDP"),
-        ("Texto de la visión", "POR ACORDAR POR EL CDP\n\n"),
-        ("Acta / fecha de concertación", "POR ACORDAR POR EL CDP"),
-        ("Participantes y constancia de disenso", "POR ACORDAR POR EL CDP"),
+        ("Horizonte temporal", ""),
+        ("Texto de la visión", "\n\n"),
+        ("Acta / fecha de concertación", ""),
+        ("Participantes y constancia de disenso", ""),
     ]
     add_table(doc, ["Campo", "Acuerdo"], vision_rows, [2.0, 4.5], font_size=9, alternating=False)
     doc.add_heading("5.2 Objetivos y resultados", level=2)
@@ -1525,16 +1679,16 @@ def build_document(facts, plate_paths):
 
     doc.add_heading("5.3 Ficha para formular una acción o proyecto", level=2)
     action_rows = [
-        ("Situación priorizada y evidencia", "POR ACORDAR POR EL CDP"),
-        ("Resultado esperado", "POR ACORDAR POR EL CDP"),
-        ("Acción / proyecto", "POR ACORDAR POR EL CDP"),
-        ("Alcance territorial y población", "POR ACORDAR POR EL CDP"),
-        ("Indicador, línea base y meta", "POR ACORDAR POR EL CDP"),
-        ("Institución responsable y aliadas", "POR ACORDAR POR EL CDP"),
-        ("Presupuesto, fuente y código SNIP", "POR ACORDAR POR EL CDP"),
-        ("Plazo, hitos y mantenimiento", "POR ACORDAR POR EL CDP"),
-        ("Riesgos, supuestos y verificación", "POR ACORDAR POR EL CDP"),
-        ("Acta / fecha del acuerdo", "POR ACORDAR POR EL CDP"),
+        ("Situación priorizada y evidencia", ""),
+        ("Resultado esperado", ""),
+        ("Acción / proyecto", ""),
+        ("Alcance territorial y población", ""),
+        ("Indicador, línea base y meta", ""),
+        ("Institución responsable y aliadas", ""),
+        ("Presupuesto, fuente y código SNIP", ""),
+        ("Plazo, hitos y mantenimiento", ""),
+        ("Riesgos, supuestos y verificación", ""),
+        ("Acta / fecha del acuerdo", ""),
     ]
     add_table(doc, ["Campo", "Definición concertada"], action_rows, [2.2, 4.3], font_size=8.5, alternating=False)
     doc.add_heading("5.4 Matriz de seguimiento", level=2)
@@ -1556,7 +1710,15 @@ def build_document(facts, plate_paths):
     doc.add_heading("Anexo A. Demandas provinciales consolidadas", level=1)
     add_body_paragraph(
         doc,
-        "El consolidado 003 registra diez demandas de María Trinidad Sánchez priorizadas en 2026. Se incluyen como evidencia de participación y como insumo para contrastar con el diagnóstico. El CDP deberá revisar vigencia, alcance, duplicidades, institución responsable, código SNIP, madurez técnica y financiamiento.",
+        (
+            (
+                f"El consolidado 003 registra 1 demanda de {PROVINCE} priorizada en 2026. Se incluye como evidencia de participación y como insumo para contrastar con el diagnóstico. El CDP deberá revisar vigencia, alcance, institución responsable, código SNIP, madurez técnica y financiamiento."
+                if len(facts["demands"]) == 1
+                else f"El consolidado 003 registra {len(facts['demands'])} demandas de {PROVINCE} priorizadas en 2026. Se incluyen como evidencia de participación y como insumo para contrastar con el diagnóstico. El CDP deberá revisar vigencia, alcance, duplicidades, institución responsable, código SNIP, madurez técnica y financiamiento."
+            )
+            if facts["demands"]
+            else f"El consolidado 003 consultado no registra demandas de {PROVINCE}. Se conserva este anexo para que el CDP documente la verificación, incorpore registros posteriores con su fuente y deje constancia de la fecha de corte."
+        ),
     )
     demand_rows = []
     for item in facts["demands"]:
@@ -1580,12 +1742,17 @@ def build_document(facts, plate_paths):
     )
     add_note_box(
         doc,
-        "Decisión pendiente",
-        "Una demanda consolidada no equivale automáticamente a una acción del Plan Provincial. La incorporación debe quedar documentada mediante criterios de priorización, diagnóstico validado y ficha técnica.",
+        "Decisión pendiente" if facts["demands"] else "Registro para completar",
+        (
+            "Una demanda consolidada no equivale automáticamente a una acción del Plan Provincial. La incorporación debe quedar documentada mediante criterios de priorización, diagnóstico validado y ficha técnica."
+            if facts["demands"]
+            else "El CDP puede incorporar en este anexo los registros verificados, indicando fuente, fecha de corte, institución responsable y localización."
+        ),
         fill="EEF5FA",
         title_color="2E74B5",
     )
-    page_break(doc)
+    if len(facts["demands"]) > 1:
+        page_break(doc)
 
     # Sources
     doc.add_heading("Fuentes y trazabilidad", level=1)
@@ -1593,8 +1760,8 @@ def build_document(facts, plate_paths):
         ("ONE-2022", "X Censo Nacional de Población y Vivienda", "2022", "Población, hogares, servicios y educación", "Alta"),
         ("DASH-DIAG", "Dashboard de Diagnóstico Territorial y datasets derivados", "2022 / 2024", "Comparaciones provincial/municipal, economía y equipamientos", "Alta / media según indicador"),
         ("DASH-PROV", "Dashboard Territorial", "2001–2026", "Seguridad, condiciones sociales, equipamientos, inversión, vías y permisos", "Según ficha de fuente"),
-        ("INV-2026", "Inversión Pública Territorial", "2026", "50 proyectos, presupuesto y ejecución al 31-07-2026", "Corte administrativo"),
-        ("DEM-2026", "Demandas Provinciales · consolidado 003", "2026", "Diez demandas de María Trinidad Sánchez", "Registro del CDP"),
+        ("INV-2026", "Inversión Pública Territorial", "2026", f"{facts['investment_2026']['projectCount']} proyectos, presupuesto y ejecución al 31-07-2026", "Corte administrativo"),
+        ("DEM-2026", "Demandas Provinciales · consolidado 003", "2026", f"{demand_phrase(len(facts['demands']))} de {PROVINCE}", "Registro del CDP"),
         ("LEY-498", "Ley núm. 498-06 de Planificación e Inversión Pública", "2006", "Arts. 14–15, 30 y 36–38", "Normativa oficial"),
         ("DEC-493", "Decreto núm. 493-07, Reglamento de Aplicación", "2007", "Arts. 4–15 y 57–61", "Normativa oficial"),
     ]
@@ -1617,7 +1784,7 @@ def build_document(facts, plate_paths):
     add_note_box(
         doc,
         "Control de versión",
-        "Documento base elaborado con información disponible al 1 de agosto de 2026. Antes de una sesión formal, la comisión técnica deberá revisar cambios de fuente, períodos parciales y actualizaciones institucionales.",
+        "Documento base elaborado con información disponible al 2 de agosto de 2026. Antes de una sesión formal, la comisión técnica deberá revisar cambios de fuente, períodos parciales y actualizaciones institucionales.",
     )
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
@@ -1625,18 +1792,20 @@ def build_document(facts, plate_paths):
     return OUTPUT
 
 
-def collect_facts():
+def collect_facts(dashboard=None, portal_data=None):
     TEMP.mkdir(parents=True, exist_ok=True)
     ensure_download(DASHBOARD_URL, DASHBOARD_PATH)
     ensure_download(DEMANDS_URL, DEMANDS_PATH)
     ensure_download(REFERENCE_URL, REFERENCE_PATH)
-    dashboard = load_json(DASHBOARD_PATH)
+    dashboard = dashboard or load_json(DASHBOARD_PATH)
     province = next(item for item in dashboard["provinces"] if item["name"] == PROVINCE)
     municipalities = [item for item in dashboard["municipalities"] if item.get("province") == PROVINCE]
-    portal_data = load_json(PROJECT / "src" / "data" / "provinces.json")
-    investment_2026 = next(item["investment"] for item in portal_data["provinces"] if item["name"] == PROVINCE)
+    portal_data = portal_data or load_json(PROJECT / "src" / "data" / "provinces.json")
+    portal_record = next(item for item in portal_data["provinces"] if item["name"] == PROVINCE)
+    investment_2026 = portal_record["investment"]
     return {
         "province": province,
+        "portal_record": portal_record,
         "municipalities": municipalities,
         "investment_2026": investment_2026,
         "demands": parse_demands(DEMANDS_PATH),
@@ -1655,20 +1824,52 @@ def collect_facts():
 
 
 def validate_facts(facts):
-    assert facts["province"]["population"] == 156633
-    assert len(facts["municipalities"]) == 4
+    assert facts["province"]["name"] == PROVINCE
+    assert facts["province"]["municipalityCount"] == len(facts["municipalities"])
     assert sum(item["population"] for item in facts["municipalities"]) == facts["province"]["population"]
-    assert len(facts["demands"]) == 10
-    assert facts["investment_2026"]["projectCount"] == 50
-    assert abs(facts["investment_2026"]["executionPct"] - 42.8331359556) < 0.01
+    assert len(facts["demands"]) == facts["portal_record"]["demands"]
+    assert facts["urban_rural"] and facts["households"] and facts["pyramid"]
+    assert facts["condition"] and facts["tic"] and facts["education"] and facts["economy"] and facts["health"]
+    municipal_condition_names = {normalize(item["municipio"]) for item in facts["municipal_condition"]}
+    assert all(normalize(item["name"]) in municipal_condition_names for item in facts["municipalities"][:4])
+    assert facts["investment_2026"]["projectCount"] >= 0
+    assert 0 <= facts["investment_2026"]["executionPct"] <= 100
 
 
 def main():
-    facts = collect_facts()
-    validate_facts(facts)
-    plates = build_plates(facts)
-    output = build_document(facts, plates)
-    print(json.dumps({"output": str(output), "plates": [str(path) for path in plates], "demands": len(facts["demands"])}, ensure_ascii=False, indent=2))
+    TEMP.mkdir(parents=True, exist_ok=True)
+    ensure_download(DASHBOARD_URL, DASHBOARD_PATH)
+    ensure_download(DEMANDS_URL, DEMANDS_PATH)
+    ensure_download(REFERENCE_URL, REFERENCE_PATH)
+    dashboard = load_json(DASHBOARD_PATH)
+    portal_data = load_json(PROJECT / "src" / "data" / "provinces.json")
+    records = sorted(portal_data["provinces"], key=lambda item: int(PROVINCE_CODES[item["name"]]))
+    outputs = []
+    for index, record in enumerate(records, 1):
+        file_name = set_province_context(record)
+        print(f"[{index:02d}/32] {TERRITORIAL_CODE} · {PROVINCE}", flush=True)
+        facts = collect_facts(dashboard, portal_data)
+        validate_facts(facts)
+        plates = build_plates(facts)
+        output = build_document(facts, plates)
+        outputs.append(
+            {
+                "provinceKey": PROVINCE_KEY,
+                "province": PROVINCE,
+                "region": REGION,
+                "regionCode": REGION_CODE,
+                "provinceCode": PROVINCE_CODE,
+                "territorialCode": TERRITORIAL_CODE,
+                "fileName": file_name,
+                "path": f"downloads/planes-provinciales/{file_name}",
+                "demands": len(facts["demands"]),
+                "pagesExpectedMinimum": 21 if len(facts["demands"]) <= 1 else 22,
+                "size": output.stat().st_size,
+            }
+        )
+    manifest = {"generatedAt": "2026-08-02", "documents": outputs}
+    MANIFEST_PATH.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print(json.dumps({"outputs": len(outputs), "manifest": str(MANIFEST_PATH)}, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":

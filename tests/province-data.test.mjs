@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import test from "node:test";
 
 const dataUrl = new URL("../src/data/provinces.json", import.meta.url);
 const geoUrl = new URL("../public/data/provinces.geojson", import.meta.url);
+const documentsUrl = new URL("../src/data/provincial-documents.json", import.meta.url);
+const downloadsUrl = new URL("../public/downloads/planes-provinciales/", import.meta.url);
 
 test("publishes one complete record for every province", async () => {
   const data = JSON.parse(await readFile(dataUrl, "utf8"));
@@ -37,19 +39,34 @@ test("maps all province records to ADM1 geometry", async () => {
   }
 });
 
-test("publishes the MTS provincial-plan base document without municipal-only references", async () => {
-  const documentUrl = new URL(
-    "../public/downloads/planes-provinciales/03140000_Plan_Provincial_Maria_Trinidad_Sanchez_Documento_Base_2026.docx",
-    import.meta.url,
+test("publishes one provincial-plan base document for all 32 provinces", async () => {
+  const [provinceData, manifest, publishedFiles] = await Promise.all([
+    readFile(dataUrl, "utf8").then(JSON.parse),
+    readFile(documentsUrl, "utf8").then(JSON.parse),
+    readdir(downloadsUrl),
+  ]);
+  assert.equal(manifest.documents.length, 32);
+  assert.equal(new Set(manifest.documents.map((item) => item.provinceKey)).size, 32);
+  assert.deepEqual(
+    new Set(manifest.documents.map((item) => item.provinceKey)),
+    new Set(provinceData.provinces.map((item) => item.key)),
   );
-  const bytes = await readFile(documentUrl);
-  assert.ok(bytes.byteLength > 500_000);
-  assert.equal(bytes.subarray(0, 2).toString("ascii"), "PK");
+  assert.equal(publishedFiles.filter((name) => name.endsWith(".docx")).length, 32);
+
+  for (const document of manifest.documents) {
+    assert.match(document.territorialCode, /^\d{4}0000$/);
+    assert.equal(document.territorialCode, `${document.regionCode}${document.provinceCode}0000`);
+    assert.ok(document.fileName.startsWith(`${document.territorialCode}_Plan_Provincial_`));
+    assert.ok(publishedFiles.includes(document.fileName));
+    const bytes = await readFile(new URL(`../public/${document.path}`, import.meta.url));
+    assert.ok(bytes.byteLength > 500_000, document.province);
+    assert.equal(bytes.subarray(0, 2).toString("ascii"), "PK");
+  }
 
   const appSource = await readFile(new URL("../src/App.jsx", import.meta.url), "utf8");
   assert.match(appSource, /Descargar documento base del Plan Provincial \(Word\)/);
-  assert.match(appSource, /mariatrinidadsanchez/);
-  assert.match(appSource, /03140000_Plan_Provincial/);
+  assert.match(appSource, /provincialDocuments\.get\(selected\.key\)/);
+  assert.doesNotMatch(appSource, /MTS_BASE_DOCUMENT/);
   assert.doesNotMatch(appSource, /14000000_Plan_Provincial/);
   assert.doesNotMatch(appSource, /no constituye un plan aprobado/i);
 });
