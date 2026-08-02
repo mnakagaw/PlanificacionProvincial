@@ -732,6 +732,14 @@ footer {
   color: white;
 }
 
+.source-link.is-download {
+  min-height: 57px;
+}
+
+.source-link.is-download strong {
+  line-height: 1.25;
+}
+
 .source-link > span:first-child {
   display: grid;
   gap: 2px;
@@ -752,6 +760,18 @@ footer {
 
 .source-link > span:last-child {
   font-size: 12px;
+}
+
+.source-link.is-download > span:last-child {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+  display: flex;
+  flex: 0 0 auto;
+  font-size: 14px;
+  height: 27px;
+  justify-content: center;
+  width: 27px;
 }
 
 .empty-detail {

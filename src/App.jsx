@@ -71,6 +71,12 @@ const decimalFormatter = new Intl.NumberFormat("es-DO", {
   maximumFractionDigits: 1,
 });
 
+const MTS_BASE_DOCUMENT = {
+  provinceKey: "mariatrinidadsanchez",
+  fileName: "14000000_Plan_Provincial_Maria_Trinidad_Sanchez_Documento_Base_2026.docx",
+  path: "downloads/planes-provinciales/14000000_Plan_Provincial_Maria_Trinidad_Sanchez_Documento_Base_2026.docx",
+};
+
 function normalize(value) {
   return String(value || "")
     .normalize("NFD")
@@ -144,19 +150,21 @@ function layerFill(province, layer, maximum) {
   return palette[index];
 }
 
-function SourceLink({ href, label, meta: sourceMeta, primary = false }) {
+function SourceLink({ href, label, meta: sourceMeta, primary = false, downloadName }) {
+  const isDownload = Boolean(downloadName);
   return (
     <a
-      className={`source-link ${primary ? "is-primary" : ""}`}
+      className={`source-link ${primary ? "is-primary" : ""} ${isDownload ? "is-download" : ""}`}
       href={href}
-      target="_blank"
-      rel="noreferrer"
+      target={isDownload ? undefined : "_blank"}
+      rel={isDownload ? undefined : "noreferrer"}
+      download={downloadName || undefined}
     >
       <span>
         <small>{sourceMeta}</small>
         <strong>{label}</strong>
       </span>
-      <span aria-hidden="true">↗</span>
+      <span aria-hidden="true">{isDownload ? "↓" : "↗"}</span>
     </a>
   );
 }
@@ -243,6 +251,8 @@ export function App() {
   const investmentUrl = selected
     ? `${meta.sources.investment.replace("data/mapa_inversion.json", "")}?source=mapa&province=${encodeURIComponent(selected.name)}`
     : "https://prodecare.net/DDPT/InversionPublicaTerritorial/";
+  const hasBaseDocument = selected?.key === MTS_BASE_DOCUMENT.provinceKey;
+  const baseDocumentUrl = `${import.meta.env.BASE_URL}${MTS_BASE_DOCUMENT.path}`;
 
   return (
     <main className="portal">
@@ -435,7 +445,7 @@ export function App() {
                   <div>
                     <small>PLAN PROVINCIAL</small>
                     <strong>{selected.plan.status}</strong>
-                    <p>No se ha identificado un plan provincial publicado.</p>
+                    <p>{hasBaseDocument ? "Documento base disponible para la formulación del CDP; no constituye un plan aprobado." : "No se ha identificado un plan provincial publicado."}</p>
                   </div>
                 </div>
 
@@ -472,7 +482,16 @@ export function App() {
                 </section>
 
                 <div className="source-links">
-                  <SourceLink href="https://prodecare.net/DDPT/Dashboard-Territorial/" label="Abrir diagnóstico territorial" meta="Población, servicios y contexto" primary />
+                  {hasBaseDocument && (
+                    <SourceLink
+                      href={baseDocumentUrl}
+                      label="Descargar documento base del Plan Provincial (Word)"
+                      meta="MTS · Diagnóstico, inversión y demandas preelaborados"
+                      primary
+                      downloadName={MTS_BASE_DOCUMENT.fileName}
+                    />
+                  )}
+                  <SourceLink href="https://prodecare.net/DDPT/Dashboard-Territorial/" label="Abrir diagnóstico territorial" meta="Población, servicios y contexto" />
                   <SourceLink href={investmentUrl} label="Ver inversión de la provincia" meta="Mapa Inversión 2026" />
                   <SourceLink href={meta.sources.demands} label="Consultar demandas provinciales" meta="Consolidado por institución" />
                   <SourceLink href={meta.sources.municipalPlanning} label="Revisar planes municipales" meta="Insumos de los municipios" />

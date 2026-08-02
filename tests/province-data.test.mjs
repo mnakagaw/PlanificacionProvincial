@@ -36,3 +36,17 @@ test("maps all province records to ADM1 geometry", async () => {
     assert.ok(geometryNames.has(province.key), province.name);
   }
 });
+
+test("publishes the MTS provincial-plan base document without municipal-only references", async () => {
+  const documentUrl = new URL(
+    "../public/downloads/planes-provinciales/14000000_Plan_Provincial_Maria_Trinidad_Sanchez_Documento_Base_2026.docx",
+    import.meta.url,
+  );
+  const bytes = await readFile(documentUrl);
+  assert.ok(bytes.byteLength > 500_000);
+  assert.equal(bytes.subarray(0, 2).toString("ascii"), "PK");
+
+  const appSource = await readFile(new URL("../src/App.jsx", import.meta.url), "utf8");
+  assert.match(appSource, /Descargar documento base del Plan Provincial \(Word\)/);
+  assert.match(appSource, /mariatrinidadsanchez/);
+});
